@@ -3,6 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../LICENSE-MIT)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](../LICENSE-APACHE-2.0)
 
+**Related blog post:** https://thavlik.dev/blog/2026-02-23/cyto-vendor-examples
+
 This crate contains **integration tests** and **usage examples** for all external data vendors that Cyto interacts with.
 The goal is **maximum reproducibility** and **guaranteed correctness** across the entire Cyto ecosystem: WSI, genomics, proteomics, ontologies, structures, and cancer datasets.
 
