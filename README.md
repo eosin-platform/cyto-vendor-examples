@@ -155,4 +155,4 @@ Pull requests welcome.
 
 # **License**
 
-Apache 2.0 + MIT dual-license, matching Cyto ecosystem policy.
+Apache 2.0 + MIT dual-license
