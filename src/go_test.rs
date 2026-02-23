@@ -113,10 +113,10 @@ fn parse_go_terms(obo: &str) -> Vec<GoTerm<'_>> {
                 namespace = value.trim();
                 continue;
             }
-            if let Some(value) = line.strip_prefix("is_a:") {
-                if let Some(parent_id) = value.trim().split_whitespace().next() {
-                    is_a.push(parent_id);
-                }
+            if let Some(value) = line.strip_prefix("is_a:")
+                && let Some(parent_id) = value.split_whitespace().next()
+            {
+                is_a.push(parent_id);
             }
         }
 
@@ -165,7 +165,7 @@ async fn go_obo_contains_basic_header_and_known_terms() -> Result<(), AnyError> 
         "Expected GO OBO header to contain 'ontology: go'"
     );
 
-    let terms = parse_go_terms(&obo_text);
+    let terms = parse_go_terms(obo_text);
 
     assert!(
         terms.len() > 10_000,
@@ -197,7 +197,7 @@ async fn go_obo_contains_basic_header_and_known_terms() -> Result<(), AnyError> 
 async fn go_obo_contains_all_core_namespaces() -> Result<(), AnyError> {
     let client = go_client()?;
     let obo_text = cached_go_obo_text(&client).await?;
-    let terms = parse_go_terms(&obo_text);
+    let terms = parse_go_terms(obo_text);
 
     let namespaces: HashSet<String> = terms
         .iter()
@@ -228,7 +228,7 @@ async fn go_obo_contains_all_core_namespaces() -> Result<(), AnyError> {
 async fn go_obo_has_basic_dag_structure_for_root_terms() -> Result<(), AnyError> {
     let client = go_client()?;
     let obo_text = cached_go_obo_text(&client).await?;
-    let terms = parse_go_terms(&obo_text);
+    let terms = parse_go_terms(obo_text);
 
     let expected_roots = [
         ("GO:0008150", "biological_process"),

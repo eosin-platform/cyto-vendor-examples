@@ -191,15 +191,15 @@ async fn fetch_uniprot_brca2_entry() -> Result<(), Box<dyn Error>> {
         );
     }
 
-    if let Some(recommended) = entry.protein_description.recommended_name.as_ref() {
-        if let Some(full_name) = recommended.full_name.as_ref() {
-            let name = full_name.value.to_ascii_lowercase();
-            assert!(
-                name.contains("brca2") || name.contains("breast cancer type 2"),
-                "Expected recommended fullName to mention BRCA2 / breast cancer type 2, got '{}'",
-                full_name.value
-            );
-        }
+    if let Some(recommended) = entry.protein_description.recommended_name.as_ref()
+        && let Some(full_name) = recommended.full_name.as_ref()
+    {
+        let name = full_name.value.to_ascii_lowercase();
+        assert!(
+            name.contains("brca2") || name.contains("breast cancer type 2"),
+            "Expected recommended fullName to mention BRCA2 / breast cancer type 2, got '{}'",
+            full_name.value
+        );
     }
 
     Ok(())

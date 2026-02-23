@@ -466,24 +466,24 @@ async fn validate_slide_url_range(
     );
 
     let header_probe = fetch_head_or_range(client, url).await;
-    if let Ok(response) = header_probe {
-        if let Some(content_type) = response.headers().get(reqwest::header::CONTENT_TYPE) {
-            let content_type = content_type
-                .to_str()
-                .unwrap_or_default()
-                .to_ascii_lowercase();
-            assert!(
-                content_type.starts_with("image/")
-                    || content_type.contains("octet-stream")
-                    || content_type.contains("dicom")
-                    || content_type.contains("tiff")
-                    || content_type.contains("svs"),
-                "Expected CPTAC cohort '{}' slide URL '{}' to return an image-like content-type when present, got '{}'",
-                cohort_label,
-                url,
-                content_type
-            );
-        }
+    if let Ok(response) = header_probe
+        && let Some(content_type) = response.headers().get(reqwest::header::CONTENT_TYPE)
+    {
+        let content_type = content_type
+            .to_str()
+            .unwrap_or_default()
+            .to_ascii_lowercase();
+        assert!(
+            content_type.starts_with("image/")
+                || content_type.contains("octet-stream")
+                || content_type.contains("dicom")
+                || content_type.contains("tiff")
+                || content_type.contains("svs"),
+            "Expected CPTAC cohort '{}' slide URL '{}' to return an image-like content-type when present, got '{}'",
+            cohort_label,
+            url,
+            content_type
+        );
     }
 
     Ok(())

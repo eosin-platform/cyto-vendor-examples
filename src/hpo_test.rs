@@ -113,10 +113,10 @@ fn parse_hpo_terms(obo: &str) -> Vec<HpoTerm<'_>> {
                 name = value.trim();
                 continue;
             }
-            if let Some(value) = line.strip_prefix("is_a:") {
-                if let Some(parent_id) = value.trim().split_whitespace().next() {
-                    is_a.push(parent_id);
-                }
+            if let Some(value) = line.strip_prefix("is_a:")
+                && let Some(parent_id) = value.split_whitespace().next()
+            {
+                is_a.push(parent_id);
             }
         }
 
@@ -249,7 +249,7 @@ async fn hpo_obo_has_multiple_top_level_branches() -> Result<(), AnyError> {
 
     let top_level_children: HashSet<String> = terms
         .iter()
-        .filter(|term| term.is_a.iter().any(|parent_id| *parent_id == "HP:0000001"))
+        .filter(|term| term.is_a.contains(&"HP:0000001"))
         .map(|term| term.id.to_string())
         .collect();
 

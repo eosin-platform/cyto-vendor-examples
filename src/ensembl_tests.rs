@@ -229,7 +229,7 @@ async fn fetch_ensembl_brca2_variation() -> Result<(), Box<dyn Error>> {
     );
     if let Some(maf) = var.minor_allele_freq {
         assert!(
-            maf >= 0.0 && maf <= 1.0,
+            (0.0..=1.0).contains(&maf),
             "Expected MAF in [0,1], got {}",
             maf
         );

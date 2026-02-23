@@ -14,7 +14,7 @@ static GENCODE_GTF_CACHE: OnceCell<String> = OnceCell::const_new();
 fn gencode_client() -> Result<Client, AnyError> {
     let client = Client::builder()
         .user_agent("cyto-vendor-examples/0.1 (gencode-integration-test)")
-        .timeout(Duration::from_secs(30)) // may need to tune for CI
+        .timeout(Duration::from_secs(45)) // may need to tune for CI
         .build()?;
     Ok(client)
 }
