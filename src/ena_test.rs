@@ -1,6 +1,6 @@
 use reqwest::Client;
-use serde::de::{self, Deserializer};
 use serde::Deserialize;
+use serde::de::{self, Deserializer};
 use std::time::Duration;
 
 type AnyError = Box<dyn std::error::Error + Send + Sync>;
@@ -52,7 +52,9 @@ async fn fetch_response(client: &Client, url: &str) -> Result<reqwest::Response,
 
     if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
-        return Err(format!("ENA request failed for URL '{url}' with status {status}: {body}").into());
+        return Err(
+            format!("ENA request failed for URL '{url}' with status {status}: {body}").into(),
+        );
     }
 
     Ok(response)
@@ -99,9 +101,9 @@ where
             if text.trim().is_empty() {
                 Ok(None)
             } else {
-                text.parse::<i64>()
-                    .map(Some)
-                    .map_err(|error| de::Error::custom(format!("Failed parsing i64 from string: {error}")))
+                text.parse::<i64>().map(Some).map_err(|error| {
+                    de::Error::custom(format!("Failed parsing i64 from string: {error}"))
+                })
             }
         }
         Some(other) => Err(de::Error::custom(format!(
@@ -152,7 +154,11 @@ struct EnaRunRecord {
     sample_accession: String,
     #[serde(default, rename = "library_strategy")]
     library_strategy: String,
-    #[serde(default, rename = "read_count", deserialize_with = "de_opt_i64_from_str_or_num")]
+    #[serde(
+        default,
+        rename = "read_count",
+        deserialize_with = "de_opt_i64_from_str_or_num"
+    )]
     read_count: Option<i64>,
 }
 
@@ -172,7 +178,11 @@ struct EnaSampleRecord {
     accession: String,
     #[serde(default)]
     scientific_name: String,
-    #[serde(default, rename = "tax_id", deserialize_with = "de_opt_i64_from_str_or_num")]
+    #[serde(
+        default,
+        rename = "tax_id",
+        deserialize_with = "de_opt_i64_from_str_or_num"
+    )]
     tax_id: Option<i64>,
 }
 
@@ -276,7 +286,8 @@ async fn ena_run_json_has_core_fields() -> Result<(), AnyError> {
         assert!(
             read_count > 0,
             "Expected ENA run '{}' read_count to be > 0 when present, got {}",
-            ENA_RUN_ACCESSION, read_count
+            ENA_RUN_ACCESSION,
+            read_count
         );
     }
 
@@ -326,7 +337,8 @@ async fn ena_sample_json_has_core_fields() -> Result<(), AnyError> {
         assert!(
             tax_id > 0,
             "Expected ENA sample '{}' tax_id to be > 0 when present, got {}",
-            ENA_SAMPLE_ACCESSION, tax_id
+            ENA_SAMPLE_ACCESSION,
+            tax_id
         );
     }
 
@@ -464,7 +476,10 @@ async fn ena_invalid_accession_returns_error() -> Result<(), AnyError> {
     if let Err(error) = json_result {
         let msg = error.to_string();
         assert!(
-            msg.contains(bad) || msg.contains("404") || msg.contains("Not Found") || msg.contains("no run records"),
+            msg.contains(bad)
+                || msg.contains("404")
+                || msg.contains("Not Found")
+                || msg.contains("no run records"),
             "Expected ENA run JSON error to mention invalid accession or no records for '{}', got '{}'",
             bad,
             msg

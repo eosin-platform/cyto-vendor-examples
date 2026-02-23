@@ -1,6 +1,6 @@
 use reqwest::Client;
-use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
 use serde_json::json;
 use std::error::Error;
 
@@ -62,14 +62,9 @@ async fn gnomad_graphql_query<T: DeserializeOwned>(
         return Err(format!("gnomAD GraphQL returned errors: {combined}").into());
     }
 
-    envelope
-        .data
-        .ok_or_else(|| {
-            format!(
-                "gnomAD GraphQL response contained no data payload for query: {query}"
-            )
-            .into()
-        })
+    envelope.data.ok_or_else(|| {
+        format!("gnomAD GraphQL response contained no data payload for query: {query}").into()
+    })
 }
 
 #[derive(Debug, Deserialize)]

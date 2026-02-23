@@ -125,8 +125,7 @@ fn is_protein_sequence(seq: &str) -> bool {
     seq.chars().all(|residue| {
         matches!(
             residue.to_ascii_uppercase(),
-            'A'
-                | 'C'
+            'A' | 'C'
                 | 'D'
                 | 'E'
                 | 'F'
@@ -169,17 +168,19 @@ async fn fetch_uniprot_brca2_entry() -> Result<(), Box<dyn Error>> {
     );
 
     assert!(
-        entry.organism.scientific_name.eq_ignore_ascii_case("Homo sapiens"),
+        entry
+            .organism
+            .scientific_name
+            .eq_ignore_ascii_case("Homo sapiens"),
         "Expected organism scientificName 'Homo sapiens', got '{}'",
         entry.organism.scientific_name
     );
-    let has_human_taxon = entry.organism.taxonomy_id == Some(9606)
-        || entry.organism.taxonomy.contains(&9606);
+    let has_human_taxon =
+        entry.organism.taxonomy_id == Some(9606) || entry.organism.taxonomy.contains(&9606);
     assert!(
         has_human_taxon,
         "Expected UniProt organism taxonomy to include taxon id 9606, got taxonId={:?}, taxonomy={:?}",
-        entry.organism.taxonomy_id,
-        entry.organism.taxonomy
+        entry.organism.taxonomy_id, entry.organism.taxonomy
     );
 
     if !entry.organism.common_name.trim().is_empty() {

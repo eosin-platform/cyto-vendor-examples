@@ -1,6 +1,6 @@
 use reqwest::Client;
-use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
 use std::time::Duration;
 
 type AnyError = Box<dyn std::error::Error + Send + Sync>;
@@ -42,9 +42,10 @@ async fn fetch_json<T: DeserializeOwned>(client: &Client, url: &str) -> Result<T
     let snippet = truncate_for_error(&text, 4096);
 
     if !status.is_success() {
-        return Err(
-            format!("dbSNP request failed for URL '{url}' with status {status}: {snippet}").into(),
-        );
+        return Err(format!(
+            "dbSNP request failed for URL '{url}' with status {status}: {snippet}"
+        )
+        .into());
     }
 
     serde_json::from_str::<T>(&text).map_err(|error| {
@@ -168,7 +169,11 @@ async fn dbsnp_brca2_variant_basic_fields() -> Result<(), AnyError> {
     let mut has_sane_allele = false;
 
     for placed in &top_level.alleles {
-        if let Some(spdi) = placed.allele.as_ref().and_then(|allele| allele.spdi.as_ref()) {
+        if let Some(spdi) = placed
+            .allele
+            .as_ref()
+            .and_then(|allele| allele.spdi.as_ref())
+        {
             if spdi.position >= 0 {
                 has_position = true;
             }

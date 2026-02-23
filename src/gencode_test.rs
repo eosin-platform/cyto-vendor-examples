@@ -171,8 +171,7 @@ fn is_protein_sequence(seq: &str) -> bool {
     seq.chars().all(|residue| {
         matches!(
             residue.to_ascii_uppercase(),
-            'A'
-                | 'C'
+            'A' | 'C'
                 | 'D'
                 | 'E'
                 | 'F'
@@ -229,10 +228,19 @@ async fn gencode_gtf_contains_brca2_gene() -> Result<(), AnyError> {
             })
         {
             found_brca2 = true;
-            assert_eq!(rec.seqname, "chr13", "Expected BRCA2 on chr13 in GENCODE GTF");
-            assert!(!rec.source.trim().is_empty(), "Expected non-empty GTF source for BRCA2");
+            assert_eq!(
+                rec.seqname, "chr13",
+                "Expected BRCA2 on chr13 in GENCODE GTF"
+            );
+            assert!(
+                !rec.source.trim().is_empty(),
+                "Expected non-empty GTF source for BRCA2"
+            );
             assert!(rec.start < rec.end, "Expected BRCA2 gene start < end");
-            assert!(matches!(rec.strand, '+' | '-'), "Expected valid strand for BRCA2 gene");
+            assert!(
+                matches!(rec.strand, '+' | '-'),
+                "Expected valid strand for BRCA2 gene"
+            );
             if let Some(gtype) = rec.gene_type() {
                 assert!(
                     gtype.to_ascii_lowercase().contains("protein_coding"),
@@ -283,7 +291,10 @@ async fn gencode_gtf_contains_brca2_transcript() -> Result<(), AnyError> {
                     rec.seqname, "chr13",
                     "Expected BRCA2 transcript ENST00000380152* on chr13"
                 );
-                assert!(!rec.source.trim().is_empty(), "Expected non-empty GTF source for BRCA2 transcript");
+                assert!(
+                    !rec.source.trim().is_empty(),
+                    "Expected non-empty GTF source for BRCA2 transcript"
+                );
                 assert!(rec.start < rec.end, "Expected transcript start < end");
                 assert!(
                     matches!(rec.strand, '+' | '-'),
@@ -334,8 +345,8 @@ async fn gencode_transcript_fasta_contains_brca2() -> Result<(), AnyError> {
         }
     }
 
-    let seq = found_brca2_tx
-        .expect("Expected transcript FASTA to contain ENST00000380152* sequence");
+    let seq =
+        found_brca2_tx.expect("Expected transcript FASTA to contain ENST00000380152* sequence");
 
     assert!(
         !seq.trim().is_empty(),

@@ -219,7 +219,8 @@ async fn fetch_ensembl_brca2_variation() -> Result<(), Box<dyn Error>> {
     assert!(
         var.species.eq_ignore_ascii_case(species),
         "Expected variation species '{}', got '{}'",
-        species, var.species
+        species,
+        var.species
     );
     assert!(
         !var.most_severe_consequence.trim().is_empty(),
@@ -227,7 +228,11 @@ async fn fetch_ensembl_brca2_variation() -> Result<(), Box<dyn Error>> {
         rs_id
     );
     if let Some(maf) = var.minor_allele_freq {
-        assert!(maf >= 0.0 && maf <= 1.0, "Expected MAF in [0,1], got {}", maf);
+        assert!(
+            maf >= 0.0 && maf <= 1.0,
+            "Expected MAF in [0,1], got {}",
+            maf
+        );
     }
     if let Some(mapping_results) = &var.mapping_results {
         assert!(
@@ -316,7 +321,10 @@ async fn ensembl_fetch_sequence(client: &Client, id: &str) -> Result<String, Box
     Ok(seq)
 }
 
-async fn ensembl_fetch_protein(client: &Client, id: &str) -> Result<EnsemblProtein, Box<dyn Error>> {
+async fn ensembl_fetch_protein(
+    client: &Client,
+    id: &str,
+) -> Result<EnsemblProtein, Box<dyn Error>> {
     let url = ensembl_lookup_id_url(id);
     let response = client.get(&url).send().await?;
     let status = response.status();
@@ -332,16 +340,19 @@ async fn ensembl_fetch_protein(client: &Client, id: &str) -> Result<EnsemblProte
 }
 
 fn is_dna_sequence(seq: &str) -> bool {
-    seq.chars()
-        .all(|base| matches!(base, 'A' | 'C' | 'G' | 'T' | 'N' | 'a' | 'c' | 'g' | 't' | 'n'))
+    seq.chars().all(|base| {
+        matches!(
+            base,
+            'A' | 'C' | 'G' | 'T' | 'N' | 'a' | 'c' | 'g' | 't' | 'n'
+        )
+    })
 }
 
 fn is_protein_sequence(seq: &str) -> bool {
     seq.chars().all(|residue| {
         matches!(
             residue.to_ascii_uppercase(),
-            'A'
-                | 'C'
+            'A' | 'C'
                 | 'D'
                 | 'E'
                 | 'F'

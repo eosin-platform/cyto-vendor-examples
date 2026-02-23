@@ -31,13 +31,9 @@ fn truncate_for_error(text: &str, max_len: usize) -> String {
 }
 
 async fn fetch_text(client: &Client, url: &str) -> Result<String, AnyError> {
-    let response = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|error| -> AnyError {
-            format!("HPO request failed for URL '{url}': {error}").into()
-        })?;
+    let response = client.get(url).send().await.map_err(|error| -> AnyError {
+        format!("HPO request failed for URL '{url}': {error}").into()
+    })?;
     let status = response.status();
     let text = response.text().await.unwrap_or_default();
     let snippet = truncate_for_error(&text, 4096);
@@ -54,17 +50,15 @@ async fn fetch_text(client: &Client, url: &str) -> Result<String, AnyError> {
 async fn fetch_hpo_obo_text(client: &Client) -> Result<String, AnyError> {
     match fetch_text(client, HPO_OBO_URL).await {
         Ok(text) => Ok(text),
-        Err(primary_error) => {
-            fetch_text(client, HPO_OBO_PURL)
-                .await
-                .map_err(|fallback_error| {
-                    format!(
-                        "Failed to fetch HPO OBO from primary URL '{}' ({}) and fallback URL '{}' ({})",
-                        HPO_OBO_URL, primary_error, HPO_OBO_PURL, fallback_error
-                    )
-                    .into()
-                })
-        }
+        Err(primary_error) => fetch_text(client, HPO_OBO_PURL)
+            .await
+            .map_err(|fallback_error| {
+                format!(
+                    "Failed to fetch HPO OBO from primary URL '{}' ({}) and fallback URL '{}' ({})",
+                    HPO_OBO_URL, primary_error, HPO_OBO_PURL, fallback_error
+                )
+                .into()
+            }),
     }
 }
 
@@ -127,11 +121,7 @@ fn parse_hpo_terms(obo: &str) -> Vec<HpoTerm<'_>> {
         }
 
         if !id.is_empty() {
-            terms.push(HpoTerm {
-                id,
-                name,
-                is_a,
-            });
+            terms.push(HpoTerm { id, name, is_a });
         }
     }
 

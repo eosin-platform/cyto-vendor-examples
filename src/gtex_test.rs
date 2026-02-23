@@ -141,9 +141,9 @@ fn extract_dzi_format(dzi_xml: &str) -> Result<String, AnyError> {
         + marker.len();
 
     let rest = &dzi_xml[start..];
-    let end = rest
-        .find('"')
-        .ok_or_else(|| format!("DeepZoom descriptor has unterminated Format attribute: '{dzi_xml}'"))?;
+    let end = rest.find('"').ok_or_else(|| {
+        format!("DeepZoom descriptor has unterminated Format attribute: '{dzi_xml}'")
+    })?;
 
     let format = rest[..end].trim();
     if format.is_empty() {
@@ -155,9 +155,7 @@ fn extract_dzi_format(dzi_xml: &str) -> Result<String, AnyError> {
 
 async fn resolve_gtex_fov_from_v2_api(client: &Client) -> Result<GtexResolvedFov, AnyError> {
     // Deterministic: always use the first record from the first page.
-    let api_url = format!(
-        "{GTEX_PORTAL_V2_BASE_URL}/histology/image?itemsPerPage=1&page=0"
-    );
+    let api_url = format!("{GTEX_PORTAL_V2_BASE_URL}/histology/image?itemsPerPage=1&page=0");
 
     let response = client.get(&api_url).send().await?;
     let status = response.status();
@@ -176,9 +174,11 @@ async fn resolve_gtex_fov_from_v2_api(client: &Client) -> Result<GtexResolvedFov
             )
         })?;
 
-    let sample = parsed.data.into_iter().next().ok_or_else(|| {
-        format!("GTEx v2 histology API returned no records for '{api_url}'")
-    })?;
+    let sample = parsed
+        .data
+        .into_iter()
+        .next()
+        .ok_or_else(|| format!("GTEx v2 histology API returned no records for '{api_url}'"))?;
 
     if sample.subject_id.trim().is_empty() || sample.histology_image_id.trim().is_empty() {
         return Err(format!(

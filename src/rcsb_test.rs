@@ -31,7 +31,9 @@ async fn fetch_bytes(client: &Client, url: &str) -> Result<bytes::Bytes, Box<dyn
 
     if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
-        return Err(format!("RCSB request failed for URL '{url}' with status {status}: {body}").into());
+        return Err(
+            format!("RCSB request failed for URL '{url}' with status {status}: {body}").into(),
+        );
     }
 
     let bytes = response.bytes().await?;
@@ -84,10 +86,7 @@ async fn rcsb_graphql_query<T: for<'de> Deserialize<'de>>(
     }
 
     envelope.data.ok_or_else(|| {
-        format!(
-            "RCSB GraphQL response contained no data payload for query: {query}"
-        )
-        .into()
+        format!("RCSB GraphQL response contained no data payload for query: {query}").into()
     })
 }
 
@@ -133,9 +132,12 @@ async fn fetch_rcsb_entry_metadata(
     client: &Client,
     pdb_id: &str,
 ) -> Result<RcsbEntry, Box<dyn Error>> {
-    let data: RcsbGraphqlData = rcsb_graphql_query(client, RCSB_ENTRY_QUERY, json!({ "id": pdb_id }))
-        .await
-        .map_err(|error| format!("Failed to fetch RCSB metadata for '{}': {}", pdb_id, error))?;
+    let data: RcsbGraphqlData =
+        rcsb_graphql_query(client, RCSB_ENTRY_QUERY, json!({ "id": pdb_id }))
+            .await
+            .map_err(|error| {
+                format!("Failed to fetch RCSB metadata for '{}': {}", pdb_id, error)
+            })?;
 
     data.entry.ok_or_else(|| {
         format!(
@@ -186,7 +188,8 @@ async fn fetch_rcsb_mmCIF_basic_structure() -> Result<(), Box<dyn Error>> {
     );
 
     assert!(
-        cif.lines().any(|line| line.trim_start().starts_with("loop_")),
+        cif.lines()
+            .any(|line| line.trim_start().starts_with("loop_")),
         "Expected mmCIF content for '{}' to contain at least one 'loop_' line",
         pdb_id
     );

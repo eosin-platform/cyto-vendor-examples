@@ -31,19 +31,17 @@ fn truncate_for_error(text: &str, max_len: usize) -> String {
 }
 
 async fn fetch_text(client: &Client, url: &str) -> Result<String, AnyError> {
-    let response = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|error| -> AnyError {
-            format!("GO request failed for URL '{url}': {error}").into()
-        })?;
+    let response = client.get(url).send().await.map_err(|error| -> AnyError {
+        format!("GO request failed for URL '{url}': {error}").into()
+    })?;
     let status = response.status();
     let text = response.text().await.unwrap_or_default();
     let snippet = truncate_for_error(&text, 4096);
 
     if !status.is_success() {
-        return Err(format!("GO request failed for URL '{url}' with status {status}: {snippet}").into());
+        return Err(
+            format!("GO request failed for URL '{url}' with status {status}: {snippet}").into(),
+        );
     }
 
     Ok(text)
@@ -52,13 +50,15 @@ async fn fetch_text(client: &Client, url: &str) -> Result<String, AnyError> {
 async fn fetch_go_obo_text(client: &Client) -> Result<String, AnyError> {
     match fetch_text(client, GO_OBO_URL).await {
         Ok(text) => Ok(text),
-        Err(primary_error) => fetch_text(client, GO_OBO_PURL).await.map_err(|fallback_error| {
-            format!(
-                "Failed to fetch GO OBO from primary URL '{}' ({}) and fallback URL '{}' ({})",
-                GO_OBO_URL, primary_error, GO_OBO_PURL, fallback_error
-            )
-            .into()
-        }),
+        Err(primary_error) => fetch_text(client, GO_OBO_PURL)
+            .await
+            .map_err(|fallback_error| {
+                format!(
+                    "Failed to fetch GO OBO from primary URL '{}' ({}) and fallback URL '{}' ({})",
+                    GO_OBO_URL, primary_error, GO_OBO_PURL, fallback_error
+                )
+                .into()
+            }),
     }
 }
 
@@ -147,11 +147,15 @@ async fn go_obo_contains_basic_header_and_known_terms() -> Result<(), AnyError> 
         "Expected GO OBO header to include at least one recognized header line"
     );
     assert!(
-        obo_text.lines().any(|line| line.starts_with("format-version:")),
+        obo_text
+            .lines()
+            .any(|line| line.starts_with("format-version:")),
         "Expected GO OBO header to contain 'format-version:'"
     );
     assert!(
-        obo_text.lines().any(|line| line.starts_with("data-version:")),
+        obo_text
+            .lines()
+            .any(|line| line.starts_with("data-version:")),
         "Expected GO OBO header to contain 'data-version:'"
     );
     assert!(
@@ -172,7 +176,9 @@ async fn go_obo_contains_basic_header_and_known_terms() -> Result<(), AnyError> 
     let root_bp = terms
         .iter()
         .find(|term| term.id == "GO:0008150")
-        .ok_or_else(|| "Expected GO root biological process term GO:0008150 to be present".to_string())?;
+        .ok_or_else(|| {
+            "Expected GO root biological process term GO:0008150 to be present".to_string()
+        })?;
 
     assert!(
         !root_bp.name.trim().is_empty(),

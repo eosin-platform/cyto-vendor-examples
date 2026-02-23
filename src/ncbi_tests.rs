@@ -1,6 +1,6 @@
 use reqwest::Client;
-use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::error::Error;
 use std::sync::OnceLock;
@@ -75,7 +75,10 @@ struct NuccoreMetadata {
     uid: u64,
     caption: String,
     title: String,
-    #[serde(rename = "slen", deserialize_with = "deserialize_u64_from_string_or_number")]
+    #[serde(
+        rename = "slen",
+        deserialize_with = "deserialize_u64_from_string_or_number"
+    )]
     length: u64,
 }
 
@@ -85,7 +88,10 @@ struct ProteinMetadata {
     uid: u64,
     caption: String,
     title: String,
-    #[serde(rename = "slen", deserialize_with = "deserialize_u64_from_string_or_number")]
+    #[serde(
+        rename = "slen",
+        deserialize_with = "deserialize_u64_from_string_or_number"
+    )]
     length: u64,
 }
 
@@ -265,7 +271,11 @@ where
         .collect())
 }
 
-async fn fetch_esummary_metadata<T>(client: &Client, db: &str, id: &str) -> Result<T, Box<dyn Error>>
+async fn fetch_esummary_metadata<T>(
+    client: &Client,
+    db: &str,
+    id: &str,
+) -> Result<T, Box<dyn Error>>
 where
     T: DeserializeOwned,
 {
@@ -318,26 +328,38 @@ where
         .into())
 }
 
-async fn fetch_gene_metadata(client: &Client, gene_id: u64) -> Result<GeneMetadata, Box<dyn Error>> {
+async fn fetch_gene_metadata(
+    client: &Client,
+    gene_id: u64,
+) -> Result<GeneMetadata, Box<dyn Error>> {
     let url = ncbi_gene_url(gene_id);
     fetch_esummary_metadata(client, "gene", &gene_id.to_string())
         .await
         .map_err(|err| format!("Failed to fetch gene metadata from '{url}': {err}").into())
 }
 
-async fn nuccore_fetch_metadata(client: &Client, id: &str) -> Result<NuccoreMetadata, Box<dyn Error>> {
+async fn nuccore_fetch_metadata(
+    client: &Client,
+    id: &str,
+) -> Result<NuccoreMetadata, Box<dyn Error>> {
     fetch_esummary_metadata(client, "nuccore", id)
         .await
         .map_err(|err| format!("Failed to fetch nuccore metadata for id '{id}': {err}").into())
 }
 
-async fn protein_fetch_metadata(client: &Client, id: &str) -> Result<ProteinMetadata, Box<dyn Error>> {
+async fn protein_fetch_metadata(
+    client: &Client,
+    id: &str,
+) -> Result<ProteinMetadata, Box<dyn Error>> {
     fetch_esummary_metadata(client, "protein", id)
         .await
         .map_err(|err| format!("Failed to fetch protein metadata for id '{id}': {err}").into())
 }
 
-async fn assembly_fetch_metadata(client: &Client, id: &str) -> Result<AssemblyMetadata, Box<dyn Error>> {
+async fn assembly_fetch_metadata(
+    client: &Client,
+    id: &str,
+) -> Result<AssemblyMetadata, Box<dyn Error>> {
     fetch_esummary_metadata(client, "assembly", id)
         .await
         .map_err(|err| format!("Failed to fetch assembly metadata for id '{id}': {err}").into())
@@ -354,14 +376,12 @@ async fn sra_fetch_metadata(client: &Client, id: &str) -> Result<SraMetadata, Bo
             raw.expxml
         )
     })?;
-    let study_accession = extract_xml_attribute(&raw.expxml, "Study", "acc").ok_or_else(
-        || {
-            format!(
-                "SRA expxml did not contain Study acc attribute for id '{id}'. expxml='{}'",
-                raw.expxml
-            )
-        },
-    )?;
+    let study_accession = extract_xml_attribute(&raw.expxml, "Study", "acc").ok_or_else(|| {
+        format!(
+            "SRA expxml did not contain Study acc attribute for id '{id}'. expxml='{}'",
+            raw.expxml
+        )
+    })?;
 
     Ok(SraMetadata {
         uid: raw.uid,
@@ -372,19 +392,30 @@ async fn sra_fetch_metadata(client: &Client, id: &str) -> Result<SraMetadata, Bo
     })
 }
 
-async fn pubmed_fetch_metadata(client: &Client, id: &str) -> Result<PubmedMetadata, Box<dyn Error>> {
+async fn pubmed_fetch_metadata(
+    client: &Client,
+    id: &str,
+) -> Result<PubmedMetadata, Box<dyn Error>> {
     fetch_esummary_metadata(client, "pubmed", id)
         .await
         .map_err(|err| format!("Failed to fetch PubMed metadata for id '{id}': {err}").into())
 }
 
-async fn taxonomy_fetch_metadata(client: &Client, taxid: &str) -> Result<TaxonomyMetadata, Box<dyn Error>> {
-    fetch_esummary_metadata(client, "taxonomy", taxid).await.map_err(|err| {
-        format!("Failed to fetch taxonomy metadata for taxid '{taxid}': {err}").into()
-    })
+async fn taxonomy_fetch_metadata(
+    client: &Client,
+    taxid: &str,
+) -> Result<TaxonomyMetadata, Box<dyn Error>> {
+    fetch_esummary_metadata(client, "taxonomy", taxid)
+        .await
+        .map_err(|err| {
+            format!("Failed to fetch taxonomy metadata for taxid '{taxid}': {err}").into()
+        })
 }
 
-async fn clinvar_fetch_metadata(client: &Client, id: &str) -> Result<ClinvarMetadata, Box<dyn Error>> {
+async fn clinvar_fetch_metadata(
+    client: &Client,
+    id: &str,
+) -> Result<ClinvarMetadata, Box<dyn Error>> {
     let mut metadata: ClinvarMetadata = fetch_esummary_metadata(client, "clinvar", id)
         .await
         .map_err(|err| format!("Failed to fetch ClinVar metadata for id '{id}': {err}"))?;
@@ -399,16 +430,26 @@ async fn clinvar_fetch_metadata(client: &Client, id: &str) -> Result<ClinvarMeta
     Ok(metadata)
 }
 
-async fn biosample_fetch_metadata(client: &Client, accession: &str) -> Result<BiosampleMetadata, Box<dyn Error>> {
+async fn biosample_fetch_metadata(
+    client: &Client,
+    accession: &str,
+) -> Result<BiosampleMetadata, Box<dyn Error>> {
     fetch_esummary_metadata(client, "biosample", accession)
         .await
-        .map_err(|err| format!("Failed to fetch BioSample metadata for accession '{accession}': {err}").into())
+        .map_err(|err| {
+            format!("Failed to fetch BioSample metadata for accession '{accession}': {err}").into()
+        })
 }
 
-async fn bioproject_fetch_metadata(client: &Client, accession: &str) -> Result<BioprojectMetadata, Box<dyn Error>> {
+async fn bioproject_fetch_metadata(
+    client: &Client,
+    accession: &str,
+) -> Result<BioprojectMetadata, Box<dyn Error>> {
     fetch_esummary_metadata(client, "bioproject", accession)
         .await
-        .map_err(|err| format!("Failed to fetch BioProject metadata for accession '{accession}': {err}").into())
+        .map_err(|err| {
+            format!("Failed to fetch BioProject metadata for accession '{accession}': {err}").into()
+        })
 }
 
 async fn mesh_fetch_metadata(client: &Client, id: &str) -> Result<MeshMetadata, Box<dyn Error>> {
@@ -622,7 +663,9 @@ async fn fetch_human_taxonomy_from_ncbi() -> Result<(), Box<dyn Error>> {
         metadata.uid
     );
     assert!(
-        metadata.scientific_name.eq_ignore_ascii_case("Homo sapiens"),
+        metadata
+            .scientific_name
+            .eq_ignore_ascii_case("Homo sapiens"),
         "Expected scientific name 'Homo sapiens', got '{}'",
         metadata.scientific_name
     );

@@ -1,6 +1,6 @@
 use reqwest::Client;
-use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
 use serde_json::json;
 use std::time::Duration;
 
@@ -216,11 +216,7 @@ async fn gdc_file_metadata_basic_fields() -> Result<(), AnyError> {
         GDC_FILE_ID, GDC_PROJECT_ID, project_id
     );
 
-    let case_ids: Vec<_> = file
-        .cases
-        .iter()
-        .map(|c| c.submitter_id.as_str())
-        .collect();
+    let case_ids: Vec<_> = file.cases.iter().map(|c| c.submitter_id.as_str()).collect();
     let sample_ids: Vec<_> = file
         .cases
         .iter()
@@ -288,7 +284,8 @@ async fn gdc_case_has_associated_slide() -> Result<(), AnyError> {
     let hits = envelope.data.hits;
 
     assert_eq!(
-        hits.len(), 1,
+        hits.len(),
+        1,
         "Expected exactly one GDC case hit for submitter id '{}', got {}",
         GDC_CASE_SUBMITTER_ID,
         hits.len()
@@ -335,19 +332,17 @@ async fn gdc_slide_head_request_valid() -> Result<(), AnyError> {
 
     let response = match fetch_head(&client, &url).await {
         Ok(response) => response,
-        Err(_) => {
-            client
-                .get(&url)
-                .header(reqwest::header::RANGE, "bytes=0-0")
-                .send()
-                .await
-                .map_err(|error| {
-                    format!(
-                        "GDC fallback range GET failed for URL '{}' after HEAD rejection: {}",
-                        url, error
-                    )
-                })?
-        }
+        Err(_) => client
+            .get(&url)
+            .header(reqwest::header::RANGE, "bytes=0-0")
+            .send()
+            .await
+            .map_err(|error| {
+                format!(
+                    "GDC fallback range GET failed for URL '{}' after HEAD rejection: {}",
+                    url, error
+                )
+            })?,
     };
 
     assert!(
@@ -377,7 +372,8 @@ async fn gdc_slide_head_request_valid() -> Result<(), AnyError> {
         .unwrap_or("");
     let lower_content_type = content_type.to_ascii_lowercase();
     assert!(
-        lower_content_type.contains("application/octet-stream") || lower_content_type.contains("svs"),
+        lower_content_type.contains("application/octet-stream")
+            || lower_content_type.contains("svs"),
         "Expected GDC slide content-type for '{}' to contain 'application/octet-stream' or 'svs', got '{}'",
         url,
         content_type

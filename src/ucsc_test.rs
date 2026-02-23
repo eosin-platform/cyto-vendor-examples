@@ -27,7 +27,9 @@ async fn fetch_bytes(client: &Client, url: &str) -> Result<bytes::Bytes, Box<dyn
 
     if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
-        return Err(format!("UCSC request failed for URL '{url}' with status {status}: {body}").into());
+        return Err(
+            format!("UCSC request failed for URL '{url}' with status {status}: {body}").into(),
+        );
     }
 
     let bytes = response.bytes().await?;
@@ -44,10 +46,9 @@ async fn fetch_bytes_range(
 
     if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
-        return Err(format!(
-            "UCSC request failed for URL '{url}' with status {status}: {body}"
-        )
-        .into());
+        return Err(
+            format!("UCSC request failed for URL '{url}' with status {status}: {body}").into(),
+        );
     }
 
     let bytes = response.bytes().await?;
@@ -105,7 +106,8 @@ async fn ucsc_hg19_to_hg38_chain_has_expected_structure() -> Result<(), Box<dyn 
 #[tokio::test]
 async fn ucsc_hg38_cytoband_table_has_chr13_rows() -> Result<(), Box<dyn Error>> {
     let client = ucsc_client()?;
-    let cytoband_text = fetch_and_gunzip_to_string(&client, ucsc_hg38_cytoband_txt_gz_url()).await?;
+    let cytoband_text =
+        fetch_and_gunzip_to_string(&client, ucsc_hg38_cytoband_txt_gz_url()).await?;
 
     assert!(
         !cytoband_text.trim().is_empty(),
@@ -154,14 +156,10 @@ async fn ucsc_hg38_cytoband_table_has_chr13_rows() -> Result<(), Box<dyn Error>>
 }
 
 #[tokio::test]
-async fn ucsc_hg38_gc5base_bigwig_has_valid_magic_and_nontrivial_size() -> Result<(), Box<dyn Error>> {
+async fn ucsc_hg38_gc5base_bigwig_has_valid_magic_and_nontrivial_size() -> Result<(), Box<dyn Error>>
+{
     let client = ucsc_client()?;
-    let bytes = fetch_bytes_range(
-        &client,
-        ucsc_hg38_gc5base_bigwig_url(),
-        "bytes=0-4095",
-    )
-    .await?;
+    let bytes = fetch_bytes_range(&client, ucsc_hg38_gc5base_bigwig_url(), "bytes=0-4095").await?;
 
     let len = bytes.len();
     assert!(

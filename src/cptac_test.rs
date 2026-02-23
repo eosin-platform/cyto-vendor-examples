@@ -1,6 +1,6 @@
 use reqwest::Client;
-use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
 use std::time::Duration;
 
 type AnyError = Box<dyn std::error::Error + Send + Sync>;
@@ -9,8 +9,10 @@ const CPTAC_API_BASE: &str = "https://services.cancerimagingarchive.net/nbia-api
 const PATHDB_API_BASE: &str = "https://pathdb.cancerimagingarchive.net/";
 const CPTAC_COLLECTION: &str = "CPTAC-LSCC";
 const CPTAC_KNOWN_PATIENT_ID: &str = "C3N-02494";
-const CPTAC_KNOWN_SERIES_UID: &str = "1.3.6.1.4.1.14519.5.2.1.4801.5885.139904327352514964836510241693";
-const CPTAC_KNOWN_SOP_UID: &str = "1.3.6.1.4.1.14519.5.2.1.4801.5885.101503750230314910409775694231";
+const CPTAC_KNOWN_SERIES_UID: &str =
+    "1.3.6.1.4.1.14519.5.2.1.4801.5885.139904327352514964836510241693";
+const CPTAC_KNOWN_SOP_UID: &str =
+    "1.3.6.1.4.1.14519.5.2.1.4801.5885.101503750230314910409775694231";
 
 const CPTAC_BRCA_COLLECTIONS: &[&str] = &["CPTAC-BRCA", "CPTAC-BRCA-1"];
 const CPTAC_UCEC_COLLECTIONS: &[&str] = &["CPTAC-UCEC"];
@@ -39,7 +41,9 @@ fn cptac_series_for_patient_url(collection: &str, patient_id: &str) -> String {
 }
 
 fn cptac_sop_uids_url(series_instance_uid: &str) -> String {
-    format!("{CPTAC_API_BASE}/getSOPInstanceUIDs?SeriesInstanceUID={series_instance_uid}&format=json")
+    format!(
+        "{CPTAC_API_BASE}/getSOPInstanceUIDs?SeriesInstanceUID={series_instance_uid}&format=json"
+    )
 }
 
 fn cptac_image_url(series_instance_uid: &str, sop_instance_uid: &str) -> String {
@@ -69,9 +73,10 @@ async fn fetch_json<T: DeserializeOwned>(client: &Client, url: &str) -> Result<T
     let snippet = truncate_for_error(&text, 4096);
 
     if !status.is_success() {
-        return Err(
-            format!("CPTAC request failed for URL '{url}' with status {status}: {snippet}").into(),
-        );
+        return Err(format!(
+            "CPTAC request failed for URL '{url}' with status {status}: {snippet}"
+        )
+        .into());
     }
 
     serde_json::from_str::<T>(&text).map_err(|error| {
@@ -147,7 +152,11 @@ async fn fetch_range_bytes(
     let body = response.bytes().await.unwrap_or_default().to_vec();
 
     if !status.is_success() {
-        return Err(format!("CPTAC range GET failed for URL '{}' with status {}", url, status).into());
+        return Err(format!(
+            "CPTAC range GET failed for URL '{}' with status {}",
+            url, status
+        )
+        .into());
     }
 
     if body.is_empty() {
@@ -226,9 +235,7 @@ fn pathdb_collections_url() -> String {
 }
 
 fn pathdb_listofimages_url(collection_id: &str, page: usize) -> String {
-    format!(
-        "{PATHDB_API_BASE}listofimages/{collection_id}?_format=json&page={page}"
-    )
+    format!("{PATHDB_API_BASE}listofimages/{collection_id}?_format=json&page={page}")
 }
 
 fn json_first_value_as_string(value: &serde_json::Value, field: &str) -> String {
@@ -461,18 +468,21 @@ async fn validate_slide_url_range(
     let header_probe = fetch_head_or_range(client, url).await;
     if let Ok(response) = header_probe {
         if let Some(content_type) = response.headers().get(reqwest::header::CONTENT_TYPE) {
-        let content_type = content_type.to_str().unwrap_or_default().to_ascii_lowercase();
-        assert!(
-            content_type.starts_with("image/")
-                || content_type.contains("octet-stream")
-                || content_type.contains("dicom")
-                || content_type.contains("tiff")
-                || content_type.contains("svs"),
-            "Expected CPTAC cohort '{}' slide URL '{}' to return an image-like content-type when present, got '{}'",
-            cohort_label,
-            url,
-            content_type
-        );
+            let content_type = content_type
+                .to_str()
+                .unwrap_or_default()
+                .to_ascii_lowercase();
+            assert!(
+                content_type.starts_with("image/")
+                    || content_type.contains("octet-stream")
+                    || content_type.contains("dicom")
+                    || content_type.contains("tiff")
+                    || content_type.contains("svs"),
+                "Expected CPTAC cohort '{}' slide URL '{}' to return an image-like content-type when present, got '{}'",
+                cohort_label,
+                url,
+                content_type
+            );
         }
     }
 
@@ -538,7 +548,10 @@ async fn pick_cptac_radiology_target(
             )
         })?;
 
-    let image_url = cptac_image_url(&chosen_series.series_instance_uid, &chosen_sop.sop_instance_uid);
+    let image_url = cptac_image_url(
+        &chosen_series.series_instance_uid,
+        &chosen_sop.sop_instance_uid,
+    );
     Ok((chosen_series, chosen_sop, image_url))
 }
 
