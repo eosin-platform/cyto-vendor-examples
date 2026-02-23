@@ -1,5 +1,5 @@
 [package]
-name = "vendor_examples"
+name = "cyto-vendor-examples"
 version = "0.1.0"
 edition = "2024"
 
