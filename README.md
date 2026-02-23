@@ -2,8 +2,6 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../LICENSE-MIT)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](../LICENSE-APACHE-2.0)
-[![GitHub issues](https://img.shields.io/github/issues/eosin-platform/cyto)](https://github.com/eosin-platform/cyto/issues)
-[![Last commit](https://img.shields.io/github/last-commit/eosin-platform/cyto?path=vendor-examples)](https://github.com/eosin-platform/cyto/commits/master/vendor-examples)
 
 This crate contains **integration tests** and **usage examples** for all external data vendors that Cyto interacts with.
 The goal is **maximum reproducibility** and **guaranteed correctness** across the entire Cyto ecosystem: WSI, genomics, proteomics, ontologies, structures, and cancer datasets.
