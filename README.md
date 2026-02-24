@@ -267,6 +267,14 @@ Below is the full vendor matrix with **Tier** and **Tested?** status.
 | **OBO Foundry Registry**                | Ontology metadata                               | N/a                     | **3**   | ➖       | Registry of OBO ontologies; no API                                         |
 | **IHME / GBD (Global Burden of Disease)** | Epidemiology & mortality                       | REST                    | **2–3** | ❌       | Global disease burden datasets                                             |
 | **UN WHO Mortality Tables**             | Mortality statistics                            | N/a                     | **3**   | ➖       | Bulk-download-only                                                         |
+| **Cellosaurus**                          | Cell-line ontology & metadata             | REST                    | **1–2** | ❌       | Canonical cell-line registry; IDs widely used in research                 |
+| **DepMap**                               | Cancer cell-line genetics (CRISPR, RNAi)  | REST + bulk             | **1–2** | ❌       | Gene essentiality, copy-number, expression; CCLE-aligned                  |
+| **CCLE (Cancer Cell Line Encyclopedia)** | Cancer cell-line molecular profiles       | N/a + partial API       | **2**   | ➖       | Expression/CNV/mutation data; bulk downloads primarily                     |
+| **PomBase**                              | Model organism — fission yeast            | REST                    | **1–2** | ❌       | Schizosaccharomyces pombe gene models, alleles, interactions              |
+| **Rhea**                                 | Curated biochemical reactions              | REST                    | **1–2** | ❌       | High-quality enzyme reaction knowledgebase linked to UniProt              |
+| **ECOD**                                 | Protein domain classification              | N/a                     | **2–3** | ➖       | Hierarchical structural domain database; bulk-only                         |
+| **FooDB**                                | Food constituent metabolomics              | REST                    | **2**   | ❌       | Food-related chemical compounds linked to nutrition & metabolomics        |
+| **USDA FoodData Central**                | Nutrition & biochemical food composition   | REST                    | **2**   | ❌       | Authoritative nutrient profiles; useful for diet–metabolomics studies     |
 
 ---
 
