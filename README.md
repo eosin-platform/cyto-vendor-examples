@@ -119,6 +119,38 @@ Below is the full vendor matrix with **Tier** and **Tested?** status. Vendors th
 | **DeepLesion**                          | CT lesion annotations                     | Bulk download           | **2**   | ➖       | NIH CT dataset widely used in radiomics                                    |
 | **MIDRC / RICORD**                      | COVID-19 radiology datasets               | Bulk download           | **2**   | ➖       | RSNA/MIDRC collections; mostly via TCIA                                    |
 | **BIMCV COVID-19+**                     | Chest X-ray/CT                            | Bulk download           | **3**   | ➖       | Spanish biomedical imaging consortium datasets                             |
+| **DrugBank**                            | Drugs, mechanisms, interactions          | REST (restricted)       | **2–3** | ➖       | Paid/commercial license; cannot redistribute                               |
+| **ChEMBL**                              | Bioactive molecules, assays              | REST                    | **1**   | ❌       | Major small-molecule/protein bioactivity DB                                 |
+| **PubChem**                             | Small molecules, structures, assays      | REST + FTP              | **0–1** | ❌       | Canonical open chemical database                                            |
+| **DrugCentral**                         | Drug labels, indications, MoA            | REST                    | **1**   | ❌       | Open-access, excellent structured drug data                                 |
+| **BindingDB**                           | Protein–ligand binding affinities         | HTTP/FTP                | **1–2** | ❌       | Large curated affinity dataset                                               |
+| **PharmGKB**                            | Pharmacogenomics                         | Restricted              | **2**   | ➖       | Requires registration; licensing limits                                      |
+| **ClinicalTrials.gov**                  | Trials, drugs, conditions                 | REST                    | **1**   | ❌       | Canonical source for studies/interventions                                   |
+| **Expression Atlas (EBI)**              | Bulk & differential expression            | REST                    | **1**   | ❌       | Gene/condition datasets; links to GEO/SCEA                                   |
+| **Single Cell Expression Atlas (SCEA)** | scRNA-seq expression                     | REST + bulk matrices    | **1–2** | ❌       | API only for metadata; expression matrices are downloads                     |
+| **GEO (Gene Expression Omnibus)**       | Transcriptomics, arrays, RNA-seq          | N/a                     | **2**   | ➖       | FTP bulk; no usable REST API; not in cyto-vendor-examples                   |
+| **Human Cell Atlas (HCA)**              | Single-cell atlases                       | REST (Azul/Matrix)      | **1**   | ❌       | High-value; JSON metadata + matrix endpoints                                 |
+| **CellxGene / CZ Biohub**               | Single-cell datasets & annotations        | REST                    | **1–2** | ❌       | API supports dataset metadata & download URLs                                |
+| **Tabula Sapiens**                      | Single-cell atlas                         | N/a                     | **2**   | ➖       | Bulk download only                                                            |
+| **PanglaoDB**                           | scRNA-seq cell-type markers               | REST                    | **1–2** | ❌       | Useful for cell-type annotation                                               |
+| **PRIDE (EBI)**                         | Proteomics datasets                        | REST + FTP              | **1**   | ❌       | Canonical proteomics archive                                                  |
+| **MassIVE (UCSD)**                      | Proteomics + metabolomics                  | N/a + partial API       | **2**   | ➖       | Some JSON endpoints; bulk primary access                                      |
+| **MetaboLights (EBI)**                  | Metabolomics datasets                      | REST                    | **1–2** | ❌       | Includes sample metadata + SDRF                                                |
+| **PeptideAtlas**                        | Peptide evidence across organisms          | N/a                     | **2**   | ➖       | Bulk datasets only                                                             |
+| **JUMP-CP / Cell Painting**             | Morphological profiling                    | N/a                     | **2–3** | ➖       | Large S3 bulk imaging; no JSON API                                             |
+| **BBBC (Broad Bioimage Benchmark)**     | Microscopy benchmarks                      | N/a                     | **2–3** | ➖       | Bulk TIFF/PNG datasets; no structured API                                      |
+| **DeepCell / TissueNet**                | Cell segmentation datasets                 | N/a                     | **2–3** | ➖       | Bulk access; no standardized REST                                              |
+| **ZINC15**                               | Drug-like compound library                 | REST                    | **1**   | ❌       | Ligand search and structure metadata                                           |
+| **MMDB (NCBI structures)**              | 3D structures                              | REST                    | **1**   | ❌       | Complementary to PDB                                                           |
+| **SwissModel Repository**               | Homology models                           | REST                    | **2**   | ❌       | Structure predictions + annotations                                             |
+| **BioLip**                              | Ligand–protein interactions               | N/a                     | **2–3** | ➖       | Bulk database of binding residues                                               |
+| **LOINC**                               | Lab & clinical measurement codes          | Restricted              | **2**   | ➖       | License-required; clinically essential                                         |
+| **ICD-10 / ICD-O**                      | Diagnostic and oncologic codes            | Restricted              | **2–3** | ➖       | WHO licensing; no open REST                                                    |
+| **OMOP CDM Vocabularies**               | Clinical vocabularies                      | N/a (download)          | **2**   | ➖       | Semi-restricted; no API                                                         |
+| **CDC Wonder**                          | Epidemiology statistics                    | REST                    | **2**   | ❌       | Population-level datasets                                                        |
+| **NHANES**                              | Health & nutrition surveys                 | N/a                     | **3**   | ➖       | Bulk tables; no API                                                             |
+| **TargetScan**                          | miRNA target predictions                   | N/a                     | **2**   | ➖       | Bulk downloads only; no REST                                                    |
+| **miRBase**                             | miRNA sequences & annotations              | FTP/REST (limited)      | **1–2** | ❌       | Canonical miRNA DB; metadata exposed via simple endpoints                      |
 
 ---
 
