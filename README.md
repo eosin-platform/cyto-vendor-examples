@@ -82,13 +82,11 @@ Below is the full vendor matrix with **Tier** and **Tested?** status. Vendors th
 | **ClinVar**                             | Variant pathogenicity                     | REST                      | **0**   | ✔️      | Canonical clinical variant database                                        |
 | **dbSNP**                               | SNP IDs                                   | REST                      | **0**   | ✔️      | Canonical SNP identifier namespace                                         |
 | **dbVar**                               | Structural variants                       | REST                      | **0**   | ✔️      | Canonical structural variant repository                                    |
-
 | **ENSEMBL**                             | Annotation, variation, cross-links        | REST                      | **1**   | ✔️      | High-value but API uptime varies                                           |
 | **gnomAD**                              | Population allele frequencies             | REST                      | **1**   | ✔️      | Essential variant frequency resource                                       |
 | **GDC (TCGA)**                          | Cancer genomics, WSI metadata             | REST                      | **1**   | ✔️      | Main TCGA access point                                                     |
 | **CPTAC**                               | Proteogenomics + WSI                      | HTTPS / portal            | **1**   | ✔️      | Open-access cohorts only; includes WSI metadata                            |
 | **GTEx Histology**                      | Tissue histology images                   | Cloud bucket              | **1–2** | ✔️      | FOV-based histology; not WSI-native                                        |
-
 | **AlphaFold DB**                        | Predicted protein structures              | REST                      | **1**   | ❌       | Planned                                                                    |
 | **InterPro**                            | Protein families & integration             | REST                      | **1–2** | ❌       | Annotates protein domains across multiple databases                        |
 | **Pfam**                                | Protein motifs & domains                  | FTP / REST                | **1**   | ❌       | Protein family models                                                       |
@@ -113,7 +111,6 @@ Below is the full vendor matrix with **Tier** and **Tested?** status. Vendors th
 | **IntAct (EBI)**                        | Molecular interaction evidence              | REST                      | **1–2** | ❌       | Curated interaction repository                                             |
 | **ComplexPortal**                       | Protein complexes                            | REST                      | **1–2** | ❌       | Structured protein complex definitions                                     |
 | **ChEBI**                               | Chemical ontology & structures              | REST                      | **1**   | ❌       | Chemical entity ontology                                                   |
-
 | **TCIA**                                | Radiology collections                       | REST                      | **2**   | ❌       | Canonical radiology repository                                             |
 | **Imaging Data Commons (IDC)**          | Cancer radiology collections                 | DICOMweb + BigQuery       | **2**   | ❌       | Cloud-hosted DICOM; complements TCIA                                       |
 | **Open-i (NLM)**                        | Biomedical figures incl. radiology           | REST search               | **2–3** | ❌       | Image search engine                                                        |
@@ -137,7 +134,6 @@ Below is the full vendor matrix with **Tier** and **Tested?** status. Vendors th
 | **Our World in Data (OWID)**            | Global health metrics                          | REST                      | **2**   | ❌       | Epidemiology & mortality data                                              |
 | **WHO GHO API**                         | World health statistics                        | REST                      | **2**   | ❌       | Official WHO global health API                                             |
 | **UNData API**                          | Population & health statistics                 | REST                      | **3**   | ❌       | Broad global datasets                                                      |
-
 | **Camelyon16/17**                       | Breast cancer WSI                             | N/a                       | **2**   | ➖       | Bulk-only WSI dataset                                                      |
 | **NIH ChestX-ray14**                    | Chest radiographs                              | N/a                       | **2**   | ➖       | Bulk dataset; no API                                                       |
 | **CheXpert**                            | Chest radiographs + labels                     | N/a                       | **2**   | ➖       | Bulk-only; no API                                                          |
@@ -146,7 +142,6 @@ Below is the full vendor matrix with **Tier** and **Tested?** status. Vendors th
 | **DeepLesion**                          | CT lesion dataset                               | N/a                       | **2**   | ➖       | Bulk-only; no API                                                           |
 | **MIDRC / RICORD**                      | COVID-19 radiology                              | N/a                       | **2**   | ➖       | Bulk-only from TCIA                                                        |
 | **BIMCV COVID-19+**                     | Chest X-ray/CT                                   | N/a                       | **3**   | ➖       | Bulk-only                                                                   |
-
 | **EMPIAR**                              | Raw EM volumes                                  | REST-like + N/a           | **1**   | ❌       | Image metadata API; volumes bulk-only                                      |
 | **EMDB**                                | EM density maps                                  | REST                      | **2**   | ❌       | Structured metadata                                                        |
 | **Image Data Resource (IDR)**           | Microscopy & EM                                   | REST (OMERO)              | **1–2** | ❌       | Metadata API; images bulk                                                  |
@@ -158,19 +153,16 @@ Below is the full vendor matrix with **Tier** and **Tested?** status. Vendors th
 | **EPFL CVLab EM**                       | 2D EM segmentation                                | N/a                       | **3**   | ➖       | Small EM dataset                                                           |
 | **Allen Cell Explorer**                 | Live-cell imaging                                 | N/a                       | **2–3** | ➖       | High-quality imaging; no API                                               |
 | **CEM500K**                             | Connectomics EM                                    | N/a                       | **3**   | ➖       | Bulk-only large dataset                                                     |
-
 | **CARD (AMR)**                          | Antibiotic resistance genes                      | N/a                       | **2–3** | ➖       | Bulk-only AMR gene database                                                |
 | **VFDB**                                | Bacterial virulence factors                       | N/a                       | **2–3** | ➖       | Bulk-only; no API                                                          |
 | **SILVA**                               | rRNA reference sequences                           | N/a                       | **2**   | ➖       | Widely used microbiome taxonomy                                            |
 | **Greengenes2**                         | Microbial taxonomy                                  | N/a                       | **2–3** | ➖       | Updated Greengenes; no API                                                 |
 | **RDP Classifier**                      | 16S reference classifier                            | N/a                       | **3**   | ➖       | Training datasets only                                                     |
-
 | **TargetScan**                          | miRNA target predictions                            | N/a                       | **2**   | ➖       | Bulk-only; no REST API                                                     |
 | **miRBase**                             | microRNA sequences & annotations                    | FTP / REST (limited)       | **1–2** | ❌       | Limited API endpoints                                                      |
 | **HMDB (Human Metabolome DB)**          | Metabolomics                                         | N/a + limited API          | **2**   | ➖       | Partial API; primary access bulk                                           |
 | **MassIVE (UCSD)**                      | Proteomics & metabolomics                            | N/a + partial API          | **2**   | ➖       | Some JSON endpoints                                                        |
 | **PeptideAtlas**                        | Peptide evidence                                     | N/a                       | **2**   | ➖       | Bulk datasets                                                              |
-
 | **Cell Ontology (CL)**                  | Cell-type ontology                                  | OBO                       | **0–1** | ❌       | Core cell ontology                                                          |
 | **Uberon**                              | Anatomy ontology                                     | OBO                       | **0–1** | ❌       | Multi-species anatomy                                                       |
 | **Sequence Ontology (SO)**              | Sequence feature ontology                            | OBO                       | **0–1** | ❌       | Used heavily in genome annotation                                           |
