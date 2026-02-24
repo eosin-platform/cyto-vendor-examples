@@ -67,7 +67,8 @@ This repository encodes all that nuance in executable tests.
 
 # **📊 Comprehensive Vendor Table**
 
-Below is the full vendor matrix with **Tier** and **Tested?** status. Vendors that lack an API but can be downloaded in full are not included here (e.g. TargetScan, miRBase)
+Below is the full vendor matrix with **Tier** and **Tested?** status.
+
 | Vendor                                 | Domain                                  | API / Access              | Tier    | Tested? | Notes                                                                      |
 | -------------------------------------- | ---------------------------------------- | -------------------------- | ------- | ------- | -------------------------------------------------------------------------- |
 | **NCBI (Entrez, SRA, GenBank, RefSeq)** | Genomics, sequences, assemblies, taxonomy | REST (E-utils)            | **0**   | ✔️      | Canonical US source                                                        |
