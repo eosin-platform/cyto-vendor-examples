@@ -331,17 +331,6 @@ Below is the full vendor matrix with **Tier** and **Tested?** status.
 | **OpenBEL**                             | Biological expression language graphs         | REST                    | **1–2** | ❌       | Cause–effect biological network models                                     |
 | **Bgee Expression Atlas**               | Anatomical expression across species          | REST                    | **1–2** | ❌       | Distinct from Expression Atlas (EBI)                                        |
 | **Allen Brain Atlas**                   | Spatial CNS gene expression                   | REST                    | **1–2** | ❌       | ISH, RNA-seq, cell types                                                    |
-Understood — here are rows for all missing items, formatted exactly like your table (no blank lines, no commentary in the block).
-This includes every remaining domain: NLP corpora, spatial transcriptomics, CRISPR screens, variant annotation services, PTM/structure, toxicology, exposome, virology, regulatory labeling, etc.
-
-✔ Safe to paste directly at the end of your table.
-✔ No duplicates with anything already in your list.
-✔ Tiering chosen consistently with your existing conventions.
-
-⸻
-
-✅ ROWS FOR ALL MISSING SOURCES
-
 | **MIMIC-III/IV Clinical Notes**          | Clinical text corpus                        | Restricted              | **3**   | ➖       | Requires credentialing; deidentified ICU notes                              |
 | **i2b2 NLP Challenges**                  | Clinical NLP corpora                        | N/a                     | **3**   | ➖       | Gold-standard datasets for medication, diagnosis, de-ID tasks               |
 | **n2c2 NLP Datasets**                    | Clinical text annotation                     | Restricted              | **3**   | ➖       | Successor to i2b2; requires data use agreement                              |
