@@ -167,6 +167,58 @@ Below is the full vendor matrix with **Tier** and **Tested?** status. Vendors th
 | **Uberon**                              | Anatomy ontology                                     | OBO                       | **0–1** | ❌       | Multi-species anatomy                                                       |
 | **Sequence Ontology (SO)**              | Sequence feature ontology                            | OBO                       | **0–1** | ❌       | Used heavily in genome annotation                                           |
 | **Disease Ontology (DO)**               | Disease classification                               | OBO                       | **0–1** | ❌       | Open disease ontology                                                       |
+| **HGMD (Human Gene Mutation Database)** | Clinical variants                          | Restricted              | **2–3** | ➖       | Commercial clinical mutation database; no public API                      |
+| **VarSome**                             | Variant annotation & ACMG classification   | Restricted (REST)       | **2**   | ➖       | Paid API; integrated knowledge graph                                      |
+| **DECIPHER**                            | Clinical structural variation              | REST                    | **1–2** | ❌       | Patient phenotypes + CNVs; partial API                                   |
+| **LOVD**                                | Community gene/variant databases           | REST                    | **1–2** | ❌       | Variant submissions for specific genes                                   |
+| **MGI (Mouse Genome Informatics)**      | Model organism — mouse                     | REST                    | **1**   | ❌       | Mouse genetics, alleles, phenotypes                                      |
+| **RGD (Rat Genome Database)**           | Model organism — rat                       | REST                    | **1**   | ❌       | Rat genomics, disease models, pathways                                   |
+| **FlyBase**                             | Model organism — Drosophila                | REST                    | **1**   | ❌       | Fly gene models, alleles, interactions                                   |
+| **WormBase / WBPS**                     | Model organism — C. elegans                | REST                    | **1**   | ❌       | Genes, phenotypes, pathways                                              |
+| **ZFIN**                                | Model organism — zebrafish                 | REST                    | **1**   | ❌       | Developmental phenotypes, expression                                     |
+| **SGD (Yeast Genome Database)**         | Model organism — yeast                     | REST                    | **1**   | ❌       | Saccharomyces cerevisiae reference DB                                    |
+| **Xenbase**                             | Model organism — Xenopus                   | REST                    | **1–2** | ❌       | Frog developmental biology                                               |
+| **Phytozome / Araport / TAIR**          | Plant genomics                             | Restricted              | **3**   | ➖       | Arabidopsis & plant resources; licensing required                        |
+| **Gramene**                             | Plant comparative genomics                 | REST                    | **2**   | ❌       | Phylogenomic and annotation resource                                     |
+| **Plant Reactome**                      | Plant pathways                              | REST                    | **2**   | ❌       | Plant pathway knowledgebase                                              |
+| **OMA (Orthologous Matrix)**            | Orthology                                   | REST                    | **1–2** | ❌       | High-quality ortholog predictions                                        |
+| **OrthoDB**                             | Ortholog clusters                           | REST                    | **1–2** | ❌       | Hierarchical orthology database                                          |
+| **Ensembl Compara**                     | Orthology / phylogeny                       | REST                    | **1**   | ❌       | Part of Ensembl, but separate API endpoints                              |
+| **GWAS Catalog**                        | Genome-wide association studies             | REST                    | **1**   | ❌       | Curated trait–variant associations                                       |
+| **eQTL Catalogue**                      | eQTL & QTL studies                          | REST                    | **1**   | ❌       | Uniform reprocessing of QTL datasets                                     |
+| **UK Biobank**                          | Genomics & clinical cohort                  | Restricted              | **3**   | ➖       | Controlled-access dataset                                                |
+| **BioBank Japan**                       | Clinical biobank                             | Restricted              | **3**   | ➖       | Large Japanese cohort; controlled access                                 |
+| **IUPHAR Guide to Pharmacology**        | Drug targets, ligands, GPCRs                | REST                    | **1–2** | ❌       | Pharmacology reference curated by IUPHAR                                 |
+| **ChemSpider**                          | Chemical structures                          | REST (key required)      | **2**   | ➖       | API requires registration; broad chemical metadata                       |
+| **Addgene (already listed)**            | –                                            | –                        | –       | –        | (skip — already included)                                                |
+| **PHASTER**                             | Prophage & phage element annotation         | REST                    | **1–2** | ❌       | Bacteriophage detection in microbial genomes                             |
+| **EnteroBase**                          | Enteric pathogen genomics                   | REST                    | **1–2** | ❌       | Salmonella, E. coli, Campylobacter, more                                 |
+| **IMG/VR (Virus/Phage)**                | Viral & phage genomes                       | Restricted              | **2–3** | ➖       | Part of JGI IMG ecosystem; login needed                                  |
+| **CRyPTIC TB AMR Database**             | Tuberculosis resistance profiles            | N/a                     | **3**   | ➖       | Bulk-only; no API                                                        |
+| **MetaPhlAn database**                  | Microbiome taxonomic markers                | N/a                     | **3**   | ➖       | Bulk reference database only                                             |
+| **Kraken2 / Bracken DBs**               | Microbiome classification indices            | N/a                     | **3**   | ➖       | Bulk-only k-mer taxonomic databases                                      |
+| **GTDB (Genome Taxonomy Database)**     | Microbial taxonomy                          | N/a                     | **2–3** | ➖       | Widely used in metagenomics; bulk-only                                   |
+| **Earth Microbiome Project**            | Microbiome survey                            | N/a                     | **3**   | ➖       | Bulk metadata + sequence archives                                        |
+| **BMRB (Biological Magnetic Resonance DB)** | NMR spectroscopy                        | REST                    | **2**   | ❌       | Protein & metabolite NMR data                                             |
+| **OpenFold training data**              | Protein structure ML datasets               | N/a                     | **3**   | ➖       | Bulk ML training sets                                                     |
+| **OpenStructure datasets**              | Structural biology ML sets                  | N/a                     | **3**   | ➖       | Bulk ML training assets                                                   |
+| **EuropePMC**                           | Literature metadata                         | REST                    | **1–2** | ❌       | Large open biomedical literature store                                    |
+| **Semantic Scholar API**                | Scholarly metadata & citations              | REST                    | **2**   | ❌       | Good for NLP & citation graph extraction                                 |
+| **CORD-19**                             | COVID-19 research corpus                     | N/a                     | **3**   | ➖       | Bulk paper corpus                                                         |
+| **NCBI BioSample**                      | Biological sample metadata                   | REST                    | **1**   | ❌       | Parallel to EBI BioSamples                                                |
+| **iGEM Registry of Standard Parts**     | Synthetic biology parts                     | REST (MediaWiki API)    | **2**   | ❌       | DNA parts, promoters, plasmids                                            |
+| **JBEI ICE Repository**                 | SynBio plasmids & parts                     | REST                    | **2**   | ❌       | Open-source ICE platform                                                  |
+| **SynBioHub**                           | Synthetic biology parts                     | REST                    | **2**   | ❌       | SBOL-formatted biological components                                      |
+| **dbNSFP**                              | Variant scoring annotations                  | N/a                     | **2**   | ➖       | Bulk functional prediction database                                       |
+| **CADD**                                | Variant deleteriousness scores               | N/a                     | **2–3** | ➖       | Bulk prediction files only                                                |
+| **PolyPhen / SIFT**                     | Protein-level variant effect prediction      | N/a                     | **3**   | ➖       | Web servers only; no API                                                  |
+| **REVEL / M-CAP / MutPred**             | Variant effect prediction                    | N/a                     | **3**   | ➖       | Bulk downloads only                                                       |
+| **MetaCyc / BioCyc (already included)** | –                                            | –                        | –       | –        | (skip)                                                                  |
+| **GTEx Expression (portal)**            | Expression quantifications                   | REST                    | **1**   | ❌       | Distinct from histology; expression matrices via API                     |
+| **Earth Human Microbiome Project**      | Human microbiome                             | N/a                     | **3**   | ➖       | Bulk-only metadata                                                       |
+| **FHIR Terminology Service (HL7)**      | Clinical vocab expansions                    | REST                    | **1–2** | ❌       | Provides ValueSet expansion & concept lookup                             |
+| **Allen Brain Atlas**                   | CNS gene expression & cell types             | REST                    | **1–2** | ❌       | Spatial transcriptomics + expression                                     |
+
 ---
 
 # **Test Organization**
