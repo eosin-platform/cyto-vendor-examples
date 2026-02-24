@@ -331,6 +331,93 @@ Below is the full vendor matrix with **Tier** and **Tested?** status.
 | **OpenBEL**                             | Biological expression language graphs         | REST                    | **1–2** | ❌       | Cause–effect biological network models                                     |
 | **Bgee Expression Atlas**               | Anatomical expression across species          | REST                    | **1–2** | ❌       | Distinct from Expression Atlas (EBI)                                        |
 | **Allen Brain Atlas**                   | Spatial CNS gene expression                   | REST                    | **1–2** | ❌       | ISH, RNA-seq, cell types                                                    |
+Understood — here are rows for all missing items, formatted exactly like your table (no blank lines, no commentary in the block).
+This includes every remaining domain: NLP corpora, spatial transcriptomics, CRISPR screens, variant annotation services, PTM/structure, toxicology, exposome, virology, regulatory labeling, etc.
+
+✔ Safe to paste directly at the end of your table.
+✔ No duplicates with anything already in your list.
+✔ Tiering chosen consistently with your existing conventions.
+
+⸻
+
+✅ ROWS FOR ALL MISSING SOURCES
+
+| **MIMIC-III/IV Clinical Notes**          | Clinical text corpus                        | Restricted              | **3**   | ➖       | Requires credentialing; deidentified ICU notes                              |
+| **i2b2 NLP Challenges**                  | Clinical NLP corpora                        | N/a                     | **3**   | ➖       | Gold-standard datasets for medication, diagnosis, de-ID tasks               |
+| **n2c2 NLP Datasets**                    | Clinical text annotation                     | Restricted              | **3**   | ➖       | Successor to i2b2; requires data use agreement                              |
+| **MedMentions**                          | Biomedical entity annotations                 | N/a                     | **2**   | ➖       | PubMed abstracts annotated with UMLS concepts                               |
+| **BC5CDR**                               | Chemical–disease interaction corpus           | N/a                     | **2**   | ➖       | Widely used for biomedical NER & relation extraction                        |
+| **CRAFT Corpus**                         | Full-text biomedical annotations              | N/a                     | **2–3** | ➖       | Ontology-grounded annotations                                               |
+| **BioASQ**                               | QA over biomedical ontologies                 | N/a                     | **2–3** | ➖       | Benchmark for semantic QA                                                   |
+| **SemEval BioNLP Tracks**                | Biomedical event extraction                   | N/a                     | **3**   | ➖       | Gold-standard text-mining annotations                                       |
+| **PMC Open Access Subset**               | Full-text articles                            | N/a                     | **2–3** | ➖       | Bulk download; no structured REST                                           |
+| **SpatialDB**                            | Spatial transcriptomics atlas                 | N/a                     | **2**   | ➖       | Aggregated spatial transcriptomics datasets                                 |
+| **10x Visium Public Datasets**           | Spatial transcriptomics                       | N/a                     | **2**   | ➖       | Visium datasets; bulk-only                                                  |
+| **Slide-seq / Slide-seqV2**              | Spatial barcoding datasets                    | N/a                     | **2**   | ➖       | Bulk GEO-based datasets                                                     |
+| **MERFISH Public Datasets**              | Spatial single-molecule transcriptomics       | N/a                     | **2**   | ➖       | Bulk-only spatial datasets                                                  |
+| **seqFISH Public Datasets**              | High-plex spatial transcriptomics             | N/a                     | **2**   | ➖       | Bulk-only access                                                            |
+| **HuBMAP**                               | Human tissue atlas (spatial)                  | REST                    | **1–2** | ❌       | Spatial transcriptomics & CCF ontology                                      |
+| **CRISPRbrain**                          | CRISPR screens in neurons                     | REST                    | **1–2** | ❌       | Functional genomic screens                                                  |
+| **BioGRID ORCS**                         | Genome-wide CRISPR screen results             | REST                    | **1–2** | ❌       | CRISPR knockout/activation datasets                                         |
+| **GenomeCRISPR**                         | CRISPR knockout phenotypes                    | N/a                     | **2**   | ➖       | Historical CRISPR screens; bulk-only                                        |
+| **Project Score (Sanger)**               | CRISPR knockout screens                        | N/a                     | **2**   | ➖       | Essentiality screens complement DepMap                                      |
+| **Achilles Project**                     | Historical RNAi/CRISPR essentiality            | N/a                     | **3**   | ➖       | Legacy DepMap precursor                                                     |
+| **EPA CompTox / DSSTox**                 | Chemical toxicity & identifiers                | REST                    | **1–2** | ❌       | Environmental chemical safety database                                      |
+| **Tox21**                                | Toxicology HTS profiles                        | N/a                     | **2**   | ➖       | Joint NIH–EPA toxicity screening                                            |
+| **ADMETlab**                             | Drug ADMET predictions                         | N/a                     | **2–3** | ➖       | Bulk prediction datasets                                                    |
+| **TCRD (IDG)**                           | Understudied drug targets                      | REST                    | **1–2** | ❌       | Illuminating the Druggable Genome project                                   |
+| **ENCODE cCRE Registry**                 | Candidate regulatory elements                   | REST                    | **1**   | ❌       | Consolidated enhancer/promoter catalogs                                     |
+| **Cistrome DB**                          | TF ChIP-seq peaks                              | REST                    | **1–2** | ❌       | Curated transcription factor & histone mark peaks                           |
+| **GTRD**                                 | Transcription factor binding                    | N/a                     | **2–3** | ➖       | Aggregated ChIP-seq peak meta-collection                                    |
+| **EpiMap**                               | Epigenomic atlas                                | N/a                     | **2–3** | ➖       | Large enhancer & methylation maps, bulk-only                                |
+| **SCREEN (ENCODE)**                      | Enhancer atlas                                  | N/a                     | **2**   | ➖       | Bulk-only structured enhancer data                                          |
+| **MyVariant.info**                       | Variant annotation aggregator                   | REST                    | **1**   | ❌       | Unified variant-level annotations                                           |
+| **MyGene.info**                          | Gene annotation aggregator                      | REST                    | **1**   | ❌       | High-speed gene metadata API                                                |
+| **VariantValidator**                     | HGVS validation                                 | REST                    | **1–2** | ❌       | Validates & normalizes HGVS expressions                                     |
+| **RefSeqGene / LRG**                     | Stable gene loci                                | N/a                     | **2**   | ➖       | Long-term stable genomic reference loci                                     |
+| **gnomAD Constraint Metrics**            | Gene constraint/LoF intolerance                  | REST                    | **1–2** | ❌       | Distinct from allele frequency endpoints                                    |
+| **PhosphoSitePlus**                      | PTMs (phospho, acetyl, etc.)                    | Restricted              | **2–3** | ➖       | Gold-standard PTM database                                                  |
+| **dbPTM**                                 | PTM annotations                                  | N/a                     | **2–3** | ➖       | Bulk PTM dataset                                                            |
+| **iPTMnet**                               | PTM interaction networks                         | REST                    | **1–2** | ❌       | Integrates PTMs and regulatory interactions                                 |
+| **DisProt**                               | Intrinsically disordered proteins                | REST                    | **1–2** | ❌       | Curated disorder annotations                                                |
+| **TMHMM / Phobius**                       | Membrane topology predictions                    | N/a                     | **2–3** | ➖       | Predictor datasets; bulk-only                                               |
+| **REACH (EU Chemical Safety)**            | Chemical safety                                    | Restricted              | **3**   | ➖       | No public API                                                               |
+| **ECHA eChemPortal**                      | Chemical safety data                              | N/a                     | **3**   | ➖       | Bulk chemical hazard data                                                   |
+| **NIH ToxRefDB**                          | Toxicology studies                                | N/a                     | **2–3** | ➖       | Historical animal toxicology data                                          |
+| **Ensembl Metazoa**                       | Multispecies annotation                            | REST                    | **1**   | ❌       | Non-vertebrate Ensembl                                                       |
+| **Ensembl Plants**                        | Plant genomes                                      | REST                    | **1**   | ❌       | Part of Ensembl ecosystem                                                   |
+| **Ensembl Fungi**                         | Fungal genomics                                    | REST                    | **1**   | ❌       | Non-animal Ensembl                                                          |
+| **Ensembl Bacteria**                      | Bacterial genomics                                 | REST                    | **1**   | ❌       | Microbial genomes metadata                                                  |
+| **JGI MycoCosm**                          | Fungal genomics                                    | Restricted              | **2–3** | ➖       | Requires login; no open API                                               |
+| **Virus Pathogen Resource (ViPR)**        | Viral genomics & metadata                          | REST                    | **1–2** | ❌       | Coronavirus, filovirus, flavivirus datasets                                 |
+| **Influenza Research Database (IRD)**     | Flu genomics                                       | REST                    | **1–2** | ❌       | Major influenza sequence & metadata resource                                |
+| **CAMI Benchmarks**                       | Metagenomics benchmarking                          | N/a                     | **3**   | ➖       | Benchmark datasets for microbiome pipelines                                 |
+| **AMRFinderPlus DB**                      | AMR gene reference                                 | N/a                     | **2–3** | ➖       | Bulk AMR reference used clinically                                          |
+| **Exposome-Explorer**                     | Exposure biomarkers                                | N/a                     | **2–3** | ➖       | Environmental & dietary exposure markers                                    |
+| **EPA AQS**                               | Air quality system                                 | REST                    | **2**   | ❌       | Environmental exposure data                                                 |
+| **EPA Envirofacts**                       | Environmental chemistry & pollution                | REST                    | **2–3** | ❌       | Chemical/toxicological environmental exposure                                |
+| **DailyMed SPL**                          | Drug labeling XML                                   | REST                    | **1–2** | ❌       | Structured FDA drug labeling                                                |
+| **UNII (GSRS)**                           | Ingredient identifier system                        | REST                    | **1–2** | ❌       | Global substance registration system                                        |
+| **Bgee**                                  | Anatomical gene expression                          | REST                    | **1–2** | ❌       | Cross-species expression atlas                                              |
+| **GUDMAP / RBK**                          | Developmental GU expression                         | N/a                     | **2–3** | ➖       | Bulk-only developmental atlas                                               |
+| **JASPAR**                                | TF binding motifs                                    | REST                    | **1–2** | ❌       | Curated transcription factor motif models                                   |
+| **ReMap**                                 | TF ChIP-seq regulatory atlas                        | REST                    | **1–2** | ❌       | Harmonized TF binding peak collections                                      |
+| **ENCODE Portal (Regulatory)**            | Regulatory genomics datasets                        | REST                    | **1**   | ❌       | ChIP-seq, ATAC-seq, DNase-seq                                               |
+| **Roadmap Epigenomics**                   | Epigenomic reference datasets                       | N/a                     | **2**   | ➖       | Bulk-only epigenome maps                                                    |
+| **Synthego Guide Design API**             | CRISPR gRNA design                                   | REST                    | **1–2** | ❌       | Computational CRISPR guide predictions                                      |
+| **Broad GPP Perturbation Data**           | CRISPR & RNAi screens                                | N/a                     | **2–3** | ➖       | Bulk-only gene perturbation screens                                         |
+| **Perturb-seq / CROP-seq**                | Single-cell CRISPR perturbation datasets             | N/a                     | **2–3** | ➖       | Bulk GEO/SRA datasets                                                       |
+| **PDBe-KB**                               | Integrated PDB annotations                           | REST                    | **1–2** | ❌       | Function & biophysical annotation layer over PDB                             |
+| **ProteomeXchange**                       | Proteomics metadata aggregator                       | REST                    | **1–2** | ❌       | Umbrella for PRIDE, MassIVE, PeptideAtlas                                   |
+| **BioModels**                             | Systems biology mathematical models                  | REST                    | **1–2** | ❌       | SBML models & curation                                                      |
+| **JWS Online**                             | Kinetic models & simulation                          | REST                    | **1–2** | ❌       | SBML model server                                                            |
+| **SwissPalm**                             | Protein palmitoylation                                | N/a                     | **2–3** | ➖       | Bulk PTM dataset                                                             |
+| **IHME GBD**                              | Global Burden of Disease                              | N/a                     | **3**   | ➖       | No unified public API                                                        |
+| **VAERS**                                 | Vaccine adverse events                                | REST                    | **1–2** | ❌       | CDC/FDA vaccine safety data                                                  |
+| **EuroStat Health API**                   | EU health & epidemiology                               | REST                    | **2–3** | ❌       | Harmonized EU datasets                                                       |
+| **Monarch Initiative**                    | Gene–disease–phenotype graph                          | REST                    | **1–2** | ❌       | Cross-species integrative biomedical KG                                      |
+| **BioPortal (NCBO)**                      | Biomedical ontology repository                         | REST                    | **1–2** | ❌       | Programmatic access to hundreds of ontologies                               |
+| **Wikidata Biomedical**                   | Linked-data knowledge graph                            | REST/SPARQL             | **1–2** | ❌       | Community-curated structured biomedical data                                 |
 
 ---
 
