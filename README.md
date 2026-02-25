@@ -370,6 +370,33 @@ Below is the full vendor matrix with **Tier** and **Tested?** status.
 | **UNII (GSRS)** | Ingredient identifier system | REST | **1–2** | ❌ | Global substance registration system |
 | **Synthego Guide Design API** | CRISPR gRNA design | REST | **1–2** | ❌ | Computational CRISPR guide predictions |
 | **Perturb-seq / CROP-seq** | Single-cell CRISPR perturbation datasets | N/a | **2–3** | ➖ | Bulk GEO/SRA datasets |
+| **SNOMED CT** | Clinical terminology                        | Restricted                 | **2–3** | ➖      | Core clinical concepts; license via SNOMED International |
+| **RxNorm** | Normalized drug terminology                 | REST (via UMLS)            | **1–2** | ➖      | US drug vocabulary; integrated with SNOMED/LOINC; UMLS license required |
+| **UMLS Metathesaurus** | Terminology hub (200+ vocabularies)         | REST / bulk files          | **2–3** | ➖      | Maps ICD, SNOMED, LOINC, RxNorm, etc.; strict licensing & sign-up |
+| **ATC** | Drug classification (WHO ATC)               | Restricted                 | **2–3** | ➖      | WHO Anatomical Therapeutic Chemical classification; licensing required |
+| **MedDRA** | Adverse event terminology                   | Restricted                 | **3**   | ➖      | Regulatory AE coding (trials, pharmacovigilance); paid license |
+| **CPT / HCPCS** | Procedure / billing codes                   | Restricted                 | **3**   | ➖      | US procedure & service codes (CPT via AMA, HCPCS via CMS) |
+| **GEO (Gene Expression Omnibus)** | Functional genomics (microarray / RNA-seq)  | REST (NCBI Entrez E-Utils) | **1**   | ❌      | Canonical NCBI expression archive; raw and curated series/platforms |
+| **ArrayExpress (BioStudies)** | Functional genomics archive                  | REST + FTP                 | **1**   | ❌      | Legacy EBI archive; many datasets feed Expression Atlas |
+| **DDBJ** | Nucleotide sequences (INSDC)                | REST + FTP                 | **0–1** | ❌      | INSDC partner to ENA/NCBI; mostly mirrored content |
+| **cBioPortal** | Cancer genomics meta-portal                 | REST                       | **1**   | ❌      | Aggregates TCGA, MSK, GENIE, etc.; strong API and client libraries |
+| **ICGC ARGO / 25K** | International cancer cohorts                | REST (ARGO) + restricted   | **2–3** | ➖      | Successor to classic ICGC; controlled-access for rich genomic/clinical data |
+| **KEGG** | Pathways, drugs, disease, compounds         | REST (KEGG API, licensed)  | **1–2** | ➖      | Major pathway + systems biology DB; commercial use requires license |
+| **PharmGKB** | Pharmacogenomics knowledgebase              | REST                       | **1–2** | ❌      | Curated gene–drug–phenotype relations; PGx guidelines and pathways |
+| **OmicsDI (Omics Discovery Index)** | Cross-repository omics index                | REST                       | **2**   | ❌      | Indexes GEO, PRIDE, ArrayExpress, MetaboLights, etc. for dataset discovery |
+| **FAIRsharing** | Standards & database registry               | REST / GraphQL (evolving)  | **3**   | ❌      | Meta-registry of databases/standards; good for auto-discovery and metadata |
+| **WikiPathways** | Community biological pathways               | REST + SPARQL              | **1–2** | ❌      | CC0 pathways; complements Reactome/KEGG; useful for lightweight pathway access |
+| **Pathology WSI Benchmarks (Kaggle/Grand Challenge)** | Histopathology ML benchmarks      | N/a        | **2–3** | ➖      | PANDA, NCT-CRC-HE, BACH, PCam, etc. |
+| **EGA (European Genome-phenome Archive)** | Controlled-access human genomics + phenotypes | Restricted              | **3**   | ➖      | EU/EBI counterpart to dbGaP; controlled-access human omics and clinical metadata |
+| **MSigDB (Molecular Signatures DB)**   | Gene sets & pathways (GSEA)                 | Restricted (downloads/API-like) | **2–3** | ➖ | De facto standard for gene signatures; licensing constraints for redistribution |
+| **LINCS / Connectivity Map (CMap / CLUE)** | Perturbation signatures (L1000, drugs, CRISPR) | REST + bulk          | **1–2** | ❌      | Large-scale perturbation-expression signatures; useful for mechanism & repurposing |
+| **GDSC (Genomics of Drug Sensitivity in Cancer)** | Cancer cell line drug response        | N/a (bulk + portal)       | **2**   | ➖      | Dose–response data for many drugs across cell lines; complements DepMap/CCLE |
+| **Orphanet / ORDO**                    | Rare diseases & orphan drugs                | REST / bulk               | **1–2** | ❌      | Rare disease registry + Orphanet Rare Disease Ontology; complements OMIM / HPO |
+| **ClinGen (Gene–Disease Validity / Actionability)** | Clinical curation (beyond dosage) | REST                     | **1–2** | ❌      | Curated gene–disease validity, actionability, pharmacogenomics; you already list Dosage Map separately |
+| **MaveDB**                             | Multiplexed assays of variant effect (MAVE) | REST + bulk               | **1–2** | ❌      | Functional scores for many variants (deep mutational scans); great for variant interpretation |
+| **UniMod**                             | Mass-spec modification definitions          | N/a (downloads)           | **2**   | ➖      | Standardized PTM mass deltas (used by search engines); complements PTM/Proteomics DBs |
+| **Alliance of Genome Resources**       | Aggregated model-organism knowledge         | REST                      | **2**   | ❌      | Integrates MGI, SGD, ZFIN, FlyBase, WormBase, etc. under one umbrella API |
+| **Pathway Commons**                    | Integrated pathway networks                  | REST                      | **2**   | ❌      | Aggregates Reactome, PID, BioCyc subsets, WikiPathways, etc. into a unified graph |
 
 ---
 
