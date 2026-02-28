@@ -1,9 +1,24 @@
 //! Integration-style tests that fetch BRCA2 metadata from NCBI and
 //! assert that key fields are parsed correctly.
+use anyhow::{Context, Result};
 
-fn main() {
-    println!("Hello, world!");
+#[tokio::main]
+async fn main() -> Result<()> {
+    let client = ncbi::NcbiClient::new()?;
+    let genes = client
+        .list_genes("BRCA2[Gene Name] AND Homo sapiens[Organism]", 0, 3)
+        .await
+        .context("Failed to list genes")?;
+    println!("Genes: {genes:#?}");
+    let gene = client
+        .fetch_gene(genes.items[0])
+        .await
+        .context("Failed to fetch gene metadata")?;
+    println!("Gene metadata: {gene:#?}");
+    Ok(())
 }
+
+mod ncbi;
 
 #[cfg(test)]
 mod ncbi_tests;

@@ -1,467 +1,20 @@
-use reqwest::Client;
-use serde::Deserialize;
-use serde::de::DeserializeOwned;
-use std::collections::HashMap;
-use std::error::Error;
-use std::sync::OnceLock;
-use tokio::sync::Mutex;
-use tokio::time::{Duration, sleep};
-
-fn ncbi_esummary_url(db: &str, id: &str) -> String {
-    format!(
-        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db={db}&id={id}&retmode=json"
-    )
-}
-
-fn ncbi_gene_url(gene_id: u64) -> String {
-    ncbi_esummary_url("gene", &gene_id.to_string())
-}
-
-fn ncbi_client() -> Result<Client, reqwest::Error> {
-    Client::builder()
-        .user_agent("cyto-vendor-examples/0.1 (integration-test)")
-        .build()
-}
-
-fn ncbi_request_gate() -> &'static Mutex<()> {
-    static REQUEST_GATE: OnceLock<Mutex<()>> = OnceLock::new();
-    REQUEST_GATE.get_or_init(|| Mutex::new(()))
-}
-
-fn deserialize_u64_from_string_or_number<'de, D>(deserializer: D) -> Result<u64, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    enum U64Like {
-        String(String),
-        Number(u64),
-    }
-
-    match U64Like::deserialize(deserializer)? {
-        U64Like::String(value) => value.parse::<u64>().map_err(serde::de::Error::custom),
-        U64Like::Number(value) => Ok(value),
-    }
-}
-
-#[derive(Debug, Deserialize)]
-struct ESummaryResponse<T> {
-    result: ESummaryResult<T>,
-}
-
-#[derive(Debug, Deserialize)]
-struct ESummaryResult<T> {
-    uids: Vec<String>,
-    #[serde(flatten)]
-    records: HashMap<String, T>,
-}
-
-#[derive(Debug, Deserialize)]
-struct GeneMetadata {
-    #[serde(
-        rename = "uid",
-        deserialize_with = "deserialize_u64_from_string_or_number"
-    )]
-    gene_id: u64,
-    #[serde(rename = "nomenclaturesymbol")]
-    symbol: String,
-    organism: Organism,
-}
-
-#[derive(Debug, Deserialize)]
-struct NuccoreMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    caption: String,
-    title: String,
-    #[serde(
-        rename = "slen",
-        deserialize_with = "deserialize_u64_from_string_or_number"
-    )]
-    length: u64,
-}
-
-#[derive(Debug, Deserialize)]
-struct ProteinMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    caption: String,
-    title: String,
-    #[serde(
-        rename = "slen",
-        deserialize_with = "deserialize_u64_from_string_or_number"
-    )]
-    length: u64,
-}
-
-#[derive(Debug, Deserialize)]
-struct AssemblyMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    assemblyaccession: String,
-    assemblyname: String,
-    organism: String,
-    #[serde(default)]
-    assemblystatus: String,
-    #[serde(default)]
-    releaselevel: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct SraMetadata {
-    uid: u64,
-    title: String,
-    study_accession: String,
-    expxml: String,
-    runs: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct RawSraMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    #[serde(default)]
-    expxml: String,
-    #[serde(default)]
-    runs: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct PubmedMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    title: String,
-    source: String,
-    #[serde(default)]
-    pubdate: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct TaxonomyMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    #[serde(rename = "scientificname")]
-    scientific_name: String,
-    #[serde(default)]
-    rank: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct ClinvarMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    #[serde(default)]
-    title: String,
-    #[serde(default)]
-    clinicalsignificancetext: String,
-    #[serde(default)]
-    variationid: String,
-    #[serde(default)]
-    accession: String,
-    #[serde(default)]
-    germline_classification: ClinvarGermlineClassification,
-}
-
-#[derive(Debug, Default, Deserialize)]
-struct ClinvarGermlineClassification {
-    #[serde(default)]
-    description: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct BiosampleMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    accession: String,
-    title: String,
-    #[serde(default)]
-    organism: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct BioprojectMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    #[serde(rename = "project_acc")]
-    project_accession: String,
-    #[serde(rename = "project_title")]
-    title: String,
-    #[serde(default, rename = "organism_name")]
-    organism: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct MeshMetadata {
-    #[serde(deserialize_with = "deserialize_u64_from_string_or_number")]
-    uid: u64,
-    #[serde(rename = "ds_meshui")]
-    mesh_id: String,
-    #[serde(rename = "ds_meshterms", deserialize_with = "deserialize_mesh_heading")]
-    heading: String,
-    #[serde(
-        default,
-        rename = "ds_idxlinks",
-        deserialize_with = "deserialize_mesh_tree_numbers"
-    )]
-    tree_numbers: Vec<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct MeshIndexLink {
-    #[serde(default)]
-    treenum: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct Organism {
-    #[serde(rename = "taxid")]
-    taxon_id: u64,
-    #[serde(rename = "scientificname")]
-    scientific_name: String,
-}
-
-fn extract_xml_tag_text(xml: &str, tag: &str) -> Option<String> {
-    let start_token = format!("<{tag}>");
-    let end_token = format!("</{tag}>");
-    let start = xml.find(&start_token)? + start_token.len();
-    let end = xml[start..].find(&end_token)? + start;
-    Some(xml[start..end].trim().to_string())
-}
-
-fn extract_xml_attribute(xml: &str, element: &str, attribute: &str) -> Option<String> {
-    let element_token = format!("<{element} ");
-    let start = xml.find(&element_token)?;
-    let after_element = &xml[start..];
-    let close = after_element.find('>')?;
-    let element_header = &after_element[..close];
-    let attr_token = format!(r#"{attribute}=""#);
-    let attr_start = element_header.find(&attr_token)? + attr_token.len();
-    let remainder = &element_header[attr_start..];
-    let attr_end = remainder.find('"')?;
-    Some(remainder[..attr_end].to_string())
-}
-
-fn deserialize_mesh_heading<'de, D>(deserializer: D) -> Result<String, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let terms = Vec::<String>::deserialize(deserializer)?;
-    terms
-        .into_iter()
-        .find(|term| !term.trim().is_empty())
-        .ok_or_else(|| serde::de::Error::custom("ds_meshterms did not contain a heading"))
-}
-
-fn deserialize_mesh_tree_numbers<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let links = Vec::<MeshIndexLink>::deserialize(deserializer)?;
-    Ok(links
-        .into_iter()
-        .filter_map(|link| {
-            let tree_number = link.treenum.trim();
-            if tree_number.is_empty() {
-                None
-            } else {
-                Some(tree_number.to_string())
-            }
-        })
-        .collect())
-}
-
-async fn fetch_esummary_metadata<T>(
-    client: &Client,
-    db: &str,
-    id: &str,
-) -> Result<T, Box<dyn Error>>
-where
-    T: DeserializeOwned,
-{
-    let url = ncbi_esummary_url(db, id);
-    let mut last_rate_limit_error = None;
-
-    for attempt in 0..5 {
-        let response = {
-            let _guard = ncbi_request_gate().lock().await;
-            sleep(Duration::from_millis(350)).await;
-            client.get(&url).send().await?
-        };
-
-        let status = response.status();
-        if status.as_u16() == 429 {
-            let body = response.text().await.unwrap_or_else(|_| String::new());
-            last_rate_limit_error = Some(format!(
-                "NCBI rate limit (429) for URL '{url}' on attempt {}. Response body: {body}",
-                attempt + 1
-            ));
-            sleep(Duration::from_secs(1 + attempt)).await;
-            continue;
-        }
-
-        if !status.is_success() {
-            let body = response.text().await.unwrap_or_else(|_| String::new());
-            return Err(format!(
-                "NCBI request failed for URL '{url}' with status {status}. Response body: {body}"
-            )
-            .into());
-        }
-
-        let mut payload: ESummaryResponse<T> = response.json().await?;
-        let uid = payload
-            .result
-            .uids
-            .first()
-            .cloned()
-            .ok_or_else(|| format!("NCBI response for URL '{url}' did not contain any UIDs"))?;
-
-        let metadata = payload.result.records.remove(&uid).ok_or_else(|| {
-            format!("NCBI response for URL '{url}' did not contain record for uid '{uid}'")
-        })?;
-
-        return Ok(metadata);
-    }
-
-    Err(last_rate_limit_error
-        .unwrap_or_else(|| format!("NCBI request retries exhausted for URL '{url}'"))
-        .into())
-}
-
-async fn fetch_gene_metadata(
-    client: &Client,
-    gene_id: u64,
-) -> Result<GeneMetadata, Box<dyn Error>> {
-    let url = ncbi_gene_url(gene_id);
-    fetch_esummary_metadata(client, "gene", &gene_id.to_string())
-        .await
-        .map_err(|err| format!("Failed to fetch gene metadata from '{url}': {err}").into())
-}
-
-async fn nuccore_fetch_metadata(
-    client: &Client,
-    id: &str,
-) -> Result<NuccoreMetadata, Box<dyn Error>> {
-    fetch_esummary_metadata(client, "nuccore", id)
-        .await
-        .map_err(|err| format!("Failed to fetch nuccore metadata for id '{id}': {err}").into())
-}
-
-async fn protein_fetch_metadata(
-    client: &Client,
-    id: &str,
-) -> Result<ProteinMetadata, Box<dyn Error>> {
-    fetch_esummary_metadata(client, "protein", id)
-        .await
-        .map_err(|err| format!("Failed to fetch protein metadata for id '{id}': {err}").into())
-}
-
-async fn assembly_fetch_metadata(
-    client: &Client,
-    id: &str,
-) -> Result<AssemblyMetadata, Box<dyn Error>> {
-    fetch_esummary_metadata(client, "assembly", id)
-        .await
-        .map_err(|err| format!("Failed to fetch assembly metadata for id '{id}': {err}").into())
-}
-
-async fn sra_fetch_metadata(client: &Client, id: &str) -> Result<SraMetadata, Box<dyn Error>> {
-    let raw: RawSraMetadata = fetch_esummary_metadata(client, "sra", id)
-        .await
-        .map_err(|err| format!("Failed to fetch SRA metadata for id '{id}': {err}"))?;
-
-    let title = extract_xml_tag_text(&raw.expxml, "Title").ok_or_else(|| {
-        format!(
-            "SRA expxml did not contain a <Title> element for id '{id}'. expxml='{}'",
-            raw.expxml
-        )
-    })?;
-    let study_accession = extract_xml_attribute(&raw.expxml, "Study", "acc").ok_or_else(|| {
-        format!(
-            "SRA expxml did not contain Study acc attribute for id '{id}'. expxml='{}'",
-            raw.expxml
-        )
-    })?;
-
-    Ok(SraMetadata {
-        uid: raw.uid,
-        title,
-        study_accession,
-        expxml: raw.expxml,
-        runs: raw.runs,
-    })
-}
-
-async fn pubmed_fetch_metadata(
-    client: &Client,
-    id: &str,
-) -> Result<PubmedMetadata, Box<dyn Error>> {
-    fetch_esummary_metadata(client, "pubmed", id)
-        .await
-        .map_err(|err| format!("Failed to fetch PubMed metadata for id '{id}': {err}").into())
-}
-
-async fn taxonomy_fetch_metadata(
-    client: &Client,
-    taxid: &str,
-) -> Result<TaxonomyMetadata, Box<dyn Error>> {
-    fetch_esummary_metadata(client, "taxonomy", taxid)
-        .await
-        .map_err(|err| {
-            format!("Failed to fetch taxonomy metadata for taxid '{taxid}': {err}").into()
-        })
-}
-
-async fn clinvar_fetch_metadata(
-    client: &Client,
-    id: &str,
-) -> Result<ClinvarMetadata, Box<dyn Error>> {
-    let mut metadata: ClinvarMetadata = fetch_esummary_metadata(client, "clinvar", id)
-        .await
-        .map_err(|err| format!("Failed to fetch ClinVar metadata for id '{id}': {err}"))?;
-
-    if metadata.clinicalsignificancetext.trim().is_empty() {
-        metadata.clinicalsignificancetext = metadata.germline_classification.description.clone();
-    }
-    if metadata.variationid.trim().is_empty() {
-        metadata.variationid = metadata.accession.clone();
-    }
-
-    Ok(metadata)
-}
-
-async fn biosample_fetch_metadata(
-    client: &Client,
-    accession: &str,
-) -> Result<BiosampleMetadata, Box<dyn Error>> {
-    fetch_esummary_metadata(client, "biosample", accession)
-        .await
-        .map_err(|err| {
-            format!("Failed to fetch BioSample metadata for accession '{accession}': {err}").into()
-        })
-}
-
-async fn bioproject_fetch_metadata(
-    client: &Client,
-    accession: &str,
-) -> Result<BioprojectMetadata, Box<dyn Error>> {
-    fetch_esummary_metadata(client, "bioproject", accession)
-        .await
-        .map_err(|err| {
-            format!("Failed to fetch BioProject metadata for accession '{accession}': {err}").into()
-        })
-}
-
-async fn mesh_fetch_metadata(client: &Client, id: &str) -> Result<MeshMetadata, Box<dyn Error>> {
-    fetch_esummary_metadata(client, "mesh", id)
-        .await
-        .map_err(|err| format!("Failed to fetch MeSH metadata for id '{id}': {err}").into())
-}
+use anyhow::{Context, Result};
+use cyto_vendor_examples::ncbi::NcbiClient;
 
 #[tokio::test]
-async fn fetch_brca2_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = fetch_gene_metadata(&client, 675).await?;
+async fn fetch_brca2_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+
+    let listing = client
+        .list_genes("BRCA2[Gene Name] AND 9606[Taxonomy ID]", 0, 20)
+        .await?;
+    assert!(
+        listing.items.contains(&675),
+        "Expected NCBI gene listing to include BRCA2 gene ID 675, got {:?}",
+        listing.items
+    );
+
+    let metadata = client.fetch_gene(675).await?;
 
     assert_eq!(
         metadata.gene_id, 675,
@@ -491,9 +44,9 @@ async fn fetch_brca2_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_brca2_nuccore_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = nuccore_fetch_metadata(&client, "NM_000059.4").await?;
+async fn fetch_brca2_nuccore_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_nuccore_metadata("NM_000059.4").await?;
 
     assert!(
         metadata.uid > 0,
@@ -520,9 +73,9 @@ async fn fetch_brca2_nuccore_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_brca2_protein_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = protein_fetch_metadata(&client, "NP_000050.3").await?;
+async fn fetch_brca2_protein_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_protein_metadata("NP_000050.3").await?;
 
     assert!(
         metadata.uid > 0,
@@ -550,9 +103,9 @@ async fn fetch_brca2_protein_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_human_assembly_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = assembly_fetch_metadata(&client, "11968211").await?;
+async fn fetch_human_assembly_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_assembly_metadata("11968211").await?;
 
     assert!(
         metadata.uid > 0,
@@ -593,9 +146,9 @@ async fn fetch_human_assembly_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_example_sra_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = sra_fetch_metadata(&client, "7426").await?;
+async fn fetch_example_sra_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_sra_metadata("7426").await?;
 
     assert!(
         metadata.uid > 0,
@@ -627,9 +180,9 @@ async fn fetch_example_sra_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_example_pubmed_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = pubmed_fetch_metadata(&client, "31452104").await?;
+async fn fetch_example_pubmed_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_pubmed_metadata("31452104").await?;
 
     assert_eq!(
         metadata.uid, 31_452_104,
@@ -653,9 +206,9 @@ async fn fetch_example_pubmed_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_human_taxonomy_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = taxonomy_fetch_metadata(&client, "9606").await?;
+async fn fetch_human_taxonomy_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_taxonomy_metadata("9606").await?;
 
     assert_eq!(
         metadata.uid, 9606,
@@ -679,9 +232,9 @@ async fn fetch_human_taxonomy_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_example_clinvar_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = clinvar_fetch_metadata(&client, "17875").await?;
+async fn fetch_example_clinvar_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_clinvar_metadata("17875").await?;
 
     assert!(
         metadata.uid > 0,
@@ -707,9 +260,9 @@ async fn fetch_example_clinvar_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_example_biosample_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = biosample_fetch_metadata(&client, "2876").await?;
+async fn fetch_example_biosample_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_biosample_metadata("2876").await?;
 
     assert!(
         metadata.uid > 0,
@@ -738,9 +291,9 @@ async fn fetch_example_biosample_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_example_bioproject_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = bioproject_fetch_metadata(&client, "31213").await?;
+async fn fetch_example_bioproject_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_bioproject_metadata("31213").await?;
 
     assert!(
         metadata.uid > 0,
@@ -769,9 +322,29 @@ async fn fetch_example_bioproject_from_ncbi() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_mesh_breast_neoplasms_from_ncbi() -> Result<(), Box<dyn Error>> {
-    let client = ncbi_client()?;
-    let metadata = mesh_fetch_metadata(&client, "68001943").await?;
+async fn fetch_human_brca2_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let genes = client
+        .list_genes("BRCA2[Gene Name] AND Homo sapiens[Organism]", 0, 3)
+        .await
+        .context("Failed to list genes")?;
+    let gene = client
+        .fetch_gene(genes.items[0])
+        .await
+        .context("Failed to fetch gene metadata")?;
+    assert_eq!(gene.symbol, "BRCA2");
+    assert_eq!(gene.description, "BRCA2 DNA repair associated");
+    assert!(gene.summary.len() > 0, "Expected non-empty BRCA2 summary");
+    assert_eq!(gene.chromosome, "13");
+    assert_eq!(gene.organism.common_name, "human");
+    assert_eq!(gene.organism.scientific_name, "Homo sapiens");
+    Ok(())
+}
+
+#[tokio::test]
+async fn fetch_mesh_breast_neoplasms_from_ncbi() -> Result<()> {
+    let client = NcbiClient::new()?;
+    let metadata = client.fetch_mesh_metadata("68001943").await?;
 
     assert!(
         metadata.uid > 0,
