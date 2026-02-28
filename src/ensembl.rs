@@ -160,6 +160,8 @@ impl EnsemblClient {
                 ));
             }
 
+            println!("{}", text);
+
             return serde_json::from_str::<T>(&text).map_err(|err| {
                 anyhow!(
                     "Failed to deserialize Ensembl JSON response from URL '{url}': {err}. Response body: {snippet}"
@@ -245,6 +247,12 @@ pub struct EnsemblGene {
     pub assembly_name: String,
     #[serde(default)]
     pub version: i64,
+    #[serde(default)]
+    pub start: u64,
+    #[serde(default)]
+    pub end: u64,
+    #[serde(default)]
+    pub strand: u64,
 }
 
 #[derive(Debug, Deserialize)]

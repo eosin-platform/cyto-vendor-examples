@@ -8,7 +8,7 @@ async fn fetch_ensembl_brca2_gene() -> Result<()> {
     let client = EnsemblClient::new()?;
     let gene_id = "ENSG00000139618";
     let gene = client.fetch_gene(gene_id).await?;
-
+    println!("{:#?}", gene);
     assert_eq!(
         gene.id, gene_id,
         "Expected Ensembl gene id '{}' for BRCA2, got '{}'",

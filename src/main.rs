@@ -74,7 +74,7 @@ mod ncbi;
 mod ncbi_tests;
 
 #[cfg(test)]
-mod ensembl_tests;
+mod ensembl_test;
 
 #[cfg(test)]
 mod uniprot_test;
