@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
-use cyto_vendor_examples::ncbi::NcbiClient;
+use crate::ncbi::{NcbiClient, Strand, parse_fasta};
+use anyhow::{Context, Result, ensure};
 
 #[tokio::test]
 async fn fetch_brca2_from_ncbi() -> Result<()> {
@@ -338,6 +338,51 @@ async fn fetch_human_brca2_from_ncbi() -> Result<()> {
     assert_eq!(gene.chromosome, "13");
     assert_eq!(gene.organism.common_name, "human");
     assert_eq!(gene.organism.scientific_name, "Homo sapiens");
+
+    let location = gene
+        .location_hist
+        .first()
+        .context("Gene metadata did not contain any locations")?;
+    ensure!(
+        location.chr_stop >= location.chr_start,
+        "Invalid location coordinates: start {} > stop {}",
+        location.chr_start,
+        location.chr_stop
+    );
+    let fasta = client
+        .fetch_nuccore_fasta_region(
+            &location.chr_acc_ver,
+            location.chr_start,
+            location.chr_stop,
+            Strand::Forward,
+        )
+        .await
+        .with_context(|| {
+            format!(
+                "Failed to fetch FASTA for {}:{}-{}",
+                location.chr_acc_ver, location.chr_start, location.chr_stop
+            )
+        })?;
+    let (header, sequence) = parse_fasta(&fasta)?;
+    ensure!(
+        header.contains(&location.chr_acc_ver),
+        "Unexpected FASTA header (expected it to mention {}), got '{header}'",
+        location.chr_acc_ver
+    );
+    let expected_len = location.chr_stop - location.chr_start + 1;
+    let observed_len = sequence.len() as u64;
+    ensure!(
+        observed_len == expected_len,
+        "FASTA sequence length mismatch for {}:{}-{}: expected {expected_len}, got {observed_len}",
+        location.chr_acc_ver,
+        location.chr_start,
+        location.chr_stop
+    );
+    println!(
+        "Fetched FASTA ok: {}:{}-{} ({} bp)",
+        location.chr_acc_ver, location.chr_start, location.chr_stop, observed_len
+    );
+
     Ok(())
 }
 

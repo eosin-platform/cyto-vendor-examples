@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow, ensure};
 use reqwest::Client;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
@@ -13,10 +13,42 @@ pub struct NcbiClient {
     client: Client,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Strand {
+    Forward,
+    Reverse,
+}
+
+impl Strand {
+    fn as_ncbi_param(self) -> u8 {
+        match self {
+            Strand::Forward => 1,
+            Strand::Reverse => 2,
+        }
+    }
+}
+
 impl NcbiClient {
     pub fn new() -> Result<Self> {
         let client = Client::builder().user_agent(DEFAULT_USER_AGENT).build()?;
         Ok(Self { client })
+    }
+
+    /// Fetches a FASTA sequence for a region within a nuccore record.
+    ///
+    /// This is useful for retrieving genomic intervals from chromosome accessions
+    /// like `NC_000013.11`.
+    pub async fn fetch_nuccore_fasta_region(
+        &self,
+        id: &str,
+        chr_start: u64,
+        chr_stop: u64,
+        strand: Strand,
+    ) -> Result<String> {
+        let url = ncbi_efetch_fasta_nuccore_region_url(id, chr_start, chr_stop, strand);
+        self.fetch_text_with_retries(&url)
+            .await
+            .map_err(|err| anyhow!("Failed to fetch nuccore FASTA region from '{url}': {err}"))
     }
 
     pub async fn list_genes(
@@ -213,6 +245,44 @@ impl NcbiClient {
                 .unwrap_or_else(|| format!("NCBI request retries exhausted for URL '{url}'"))
         ))
     }
+
+    async fn fetch_text_with_retries(&self, url: &str) -> Result<String> {
+        let mut last_rate_limit_error = None;
+
+        for attempt in 0..5 {
+            let response = {
+                let _guard = ncbi_request_gate().lock().await;
+                sleep(Duration::from_millis(350)).await;
+                self.client.get(url).send().await?
+            };
+
+            let status = response.status();
+            if status.as_u16() == 429 {
+                let body = response.text().await.unwrap_or_else(|_| String::new());
+                last_rate_limit_error = Some(format!(
+                    "NCBI rate limit (429) for URL '{url}' on attempt {}. Response body: {body}",
+                    attempt + 1
+                ));
+                sleep(Duration::from_secs(1 + attempt)).await;
+                continue;
+            }
+
+            if !status.is_success() {
+                let body = response.text().await.unwrap_or_else(|_| String::new());
+                return Err(anyhow!(
+                    "NCBI request failed for URL '{url}' with status {status}. Response body: {body}"
+                ));
+            }
+
+            return Ok(response.text().await?);
+        }
+
+        Err(anyhow!(
+            "{}",
+            last_rate_limit_error
+                .unwrap_or_else(|| format!("NCBI request retries exhausted for URL '{url}'"))
+        ))
+    }
 }
 
 fn ncbi_request_gate() -> &'static Mutex<()> {
@@ -229,6 +299,18 @@ fn ncbi_esummary_url(db: &str, id: &str) -> String {
 fn ncbi_esearch_url(db: &str, term: &str, retmax: usize, retstart: usize) -> String {
     format!(
         "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db={db}&term={term}&retmode=json&retmax={retmax}&retstart={retstart}"
+    )
+}
+
+fn ncbi_efetch_fasta_nuccore_region_url(
+    id: &str,
+    chr_start: u64,
+    chr_stop: u64,
+    strand: Strand,
+) -> String {
+    format!(
+        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id={id}&rettype=fasta&retmode=text&strand={}&seq_start={chr_start}&seq_stop={chr_stop}",
+        strand.as_ncbi_param()
     )
 }
 
@@ -249,6 +331,59 @@ where
         U64Like::String(value) => value.parse::<u64>().map_err(serde::de::Error::custom),
         U64Like::Number(value) => Ok(value),
     }
+}
+
+pub fn parse_fasta(fasta: &str) -> Result<(String, String)> {
+    let mut lines = fasta.lines();
+    let header_line = lines.next().context("FASTA was empty")?.trim_end();
+    ensure!(
+        header_line.starts_with('>'),
+        "FASTA header did not start with '>', got '{header_line}'"
+    );
+
+    let header = header_line.trim_start_matches('>').trim().to_string();
+    ensure!(!header.is_empty(), "FASTA header was empty");
+
+    let mut sequence = String::new();
+    for line in lines {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        ensure!(
+            !line.starts_with('>'),
+            "FASTA contained an unexpected second header: '{line}'"
+        );
+        sequence.push_str(line);
+    }
+
+    ensure!(!sequence.is_empty(), "FASTA sequence was empty");
+
+    // Accept IUPAC nucleotide codes (including N) in either case.
+    for ch in sequence.chars() {
+        let ch = ch.to_ascii_uppercase();
+        let ok = matches!(
+            ch,
+            'A' | 'C'
+                | 'G'
+                | 'T'
+                | 'U'
+                | 'R'
+                | 'Y'
+                | 'K'
+                | 'M'
+                | 'S'
+                | 'W'
+                | 'B'
+                | 'D'
+                | 'H'
+                | 'V'
+                | 'N'
+        );
+        ensure!(ok, "FASTA sequence contained an invalid base '{ch}'");
+    }
+
+    Ok((header, sequence))
 }
 
 #[derive(Debug, Deserialize)]
