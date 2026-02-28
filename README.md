@@ -69,6 +69,8 @@ This repository encodes all that nuance in executable tests.
 
 Below is the full vendor matrix with **Tier** and **Tested?** status.
 
+Note that ontology data will exist in a separate layer above "pullable" artifacts. These data are attached to pullable artifacts on-demand as annotations, preserving clean API responses for the 99% of users that don't require ontology. Ontology vendors are nonetheless listed here for completedness.
+
 | Vendor                                 | Domain                                  | API / Access              | Tier    | Tested? | Notes                                                                      |
 | -------------------------------------- | ---------------------------------------- | -------------------------- | ------- | ------- | -------------------------------------------------------------------------- |
 | **NCBI (Entrez, SRA, GenBank, RefSeq)** | Genomics, sequences, assemblies, taxonomy | REST (E-utils) | **0** | ✔️ | Canonical US source |
