@@ -71,6 +71,9 @@ mod ensembl;
 mod ncbi;
 
 #[cfg(test)]
+mod rcsb;
+
+#[cfg(test)]
 mod ncbi_tests;
 
 #[cfg(test)]

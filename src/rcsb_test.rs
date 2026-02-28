@@ -1,166 +1,18 @@
-use reqwest::Client;
-use serde::Deserialize;
-use serde_json::json;
-use std::error::Error;
+use anyhow::{Result, ensure};
 
-const RCSB_GRAPHQL_URL: &str = "https://data.rcsb.org/graphql";
-
-fn rcsb_client() -> Result<Client, reqwest::Error> {
-    Client::builder()
-        .user_agent("cyto-vendor-examples/0.1 (rcsb-integration-test)")
-        .build()
-}
-
-fn rcsb_cif_url(pdb_id: &str) -> String {
-    format!("https://files.rcsb.org/download/{pdb_id}.cif")
-}
-
-fn rcsb_pdb_url(pdb_id: &str) -> String {
-    format!("https://files.rcsb.org/download/{pdb_id}.pdb")
-}
-
-async fn fetch_text(client: &Client, url: &str) -> Result<String, Box<dyn Error>> {
-    let bytes = fetch_bytes(client, url).await?;
-    let text = String::from_utf8_lossy(&bytes).into_owned();
-    Ok(text)
-}
-
-async fn fetch_bytes(client: &Client, url: &str) -> Result<bytes::Bytes, Box<dyn Error>> {
-    let response = client.get(url).send().await?;
-    let status = response.status();
-
-    if !status.is_success() {
-        let body = response.text().await.unwrap_or_default();
-        return Err(
-            format!("RCSB request failed for URL '{url}' with status {status}: {body}").into(),
-        );
-    }
-
-    let bytes = response.bytes().await?;
-    Ok(bytes)
-}
-
-#[derive(Debug, Deserialize)]
-struct GraphqlError {
-    message: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct GraphqlEnvelope<T> {
-    data: Option<T>,
-    #[serde(default)]
-    errors: Vec<GraphqlError>,
-}
-
-async fn rcsb_graphql_query<T: for<'de> Deserialize<'de>>(
-    client: &Client,
-    query: &str,
-    variables: serde_json::Value,
-) -> Result<T, Box<dyn Error>> {
-    let body = json!({
-        "query": query,
-        "variables": variables,
-    });
-
-    let response = client.post(RCSB_GRAPHQL_URL).json(&body).send().await?;
-    let status = response.status();
-
-    if !status.is_success() {
-        let text = response.text().await.unwrap_or_default();
-        return Err(format!(
-            "RCSB request failed for URL '{}' with status {}: {}",
-            RCSB_GRAPHQL_URL, status, text
-        )
-        .into());
-    }
-
-    let envelope: GraphqlEnvelope<T> = response.json().await?;
-    if !envelope.errors.is_empty() {
-        let combined = envelope
-            .errors
-            .iter()
-            .map(|error| error.message.as_str())
-            .collect::<Vec<_>>()
-            .join("; ");
-        return Err(format!("RCSB GraphQL returned errors: {combined}").into());
-    }
-
-    envelope.data.ok_or_else(|| {
-        format!("RCSB GraphQL response contained no data payload for query: {query}").into()
-    })
-}
-
-#[derive(Debug, Deserialize)]
-struct RcsbGraphqlData {
-    entry: Option<RcsbEntry>,
-}
-
-#[derive(Debug, Deserialize)]
-struct RcsbEntry {
-    rcsb_id: String,
-    #[serde(default)]
-    r#struct: Option<RcsbStruct>,
-    #[serde(default)]
-    rcsb_entry_info: Option<RcsbEntryInfo>,
-}
-
-#[derive(Debug, Deserialize)]
-struct RcsbStruct {
-    title: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct RcsbEntryInfo {
-    molecular_weight: Option<f64>,
-}
-
-const RCSB_ENTRY_QUERY: &str = r#"
-query ($id: String!) {
-  entry(entry_id: $id) {
-        rcsb_id
-    struct {
-      title
-    }
-    rcsb_entry_info {
-      molecular_weight
-    }
-  }
-}
-"#;
-
-async fn fetch_rcsb_entry_metadata(
-    client: &Client,
-    pdb_id: &str,
-) -> Result<RcsbEntry, Box<dyn Error>> {
-    let data: RcsbGraphqlData =
-        rcsb_graphql_query(client, RCSB_ENTRY_QUERY, json!({ "id": pdb_id }))
-            .await
-            .map_err(|error| {
-                format!("Failed to fetch RCSB metadata for '{}': {}", pdb_id, error)
-            })?;
-
-    data.entry.ok_or_else(|| {
-        format!(
-            "RCSB GraphQL returned null entry payload for entry id '{}'",
-            pdb_id
-        )
-        .into()
-    })
-}
+use crate::rcsb::RcsbClient;
 
 #[allow(non_snake_case)]
 #[tokio::test]
-async fn fetch_rcsb_mmCIF_basic_structure() -> Result<(), Box<dyn Error>> {
-    let client = rcsb_client()?;
+async fn fetch_rcsb_mmCIF_basic_structure() -> Result<()> {
+    let client = RcsbClient::new()?;
     let pdb_id = "6VXX";
-    let url = rcsb_cif_url(pdb_id);
-    let cif_bytes = fetch_bytes(&client, &url).await?;
+    let cif_bytes = client.download_cif_bytes(pdb_id).await?;
     let cif = String::from_utf8_lossy(&cif_bytes);
 
     assert!(
         !cif.trim().is_empty(),
-        "Expected mmCIF response to be non-empty for PDB id '{}'",
-        pdb_id
+        "Expected mmCIF response to be non-empty for PDB id '{pdb_id}'"
     );
 
     let first_non_empty_line = cif
@@ -171,40 +23,31 @@ async fn fetch_rcsb_mmCIF_basic_structure() -> Result<(), Box<dyn Error>> {
         first_non_empty_line
             .to_ascii_lowercase()
             .starts_with("data_"),
-        "Expected mmCIF first non-empty line to start with 'data_' (case-insensitive) for '{}', got '{}': URL {}",
-        pdb_id,
-        first_non_empty_line,
-        url
+        "Expected mmCIF first non-empty line to start with 'data_' (case-insensitive) for '{pdb_id}', got '{first_non_empty_line}'"
     );
 
     assert!(
         first_non_empty_line
             .to_ascii_lowercase()
             .contains(&pdb_id.to_ascii_lowercase()),
-        "Expected mmCIF data block name to include PDB id '{}' in first line '{}': URL {}",
-        pdb_id,
-        first_non_empty_line,
-        url
+        "Expected mmCIF data block name to include PDB id '{pdb_id}' in first line '{first_non_empty_line}'"
     );
 
     assert!(
         cif.lines()
             .any(|line| line.trim_start().starts_with("loop_")),
-        "Expected mmCIF content for '{}' to contain at least one 'loop_' line",
-        pdb_id
+        "Expected mmCIF content for '{pdb_id}' to contain at least one 'loop_' line"
     );
 
     assert!(
         cif.contains("_atom_site.label_atom_id")
             || cif.contains("_entity_poly.pdbx_seq_one_letter_code"),
-        "Expected mmCIF content for '{}' to include key tags '_atom_site.label_atom_id' or '_entity_poly.pdbx_seq_one_letter_code'",
-        pdb_id
+        "Expected mmCIF content for '{pdb_id}' to include key tags '_atom_site.label_atom_id' or '_entity_poly.pdbx_seq_one_letter_code'"
     );
 
     assert!(
         cif_bytes.len() > 10 * 1024,
-        "Expected mmCIF content for '{}' to exceed 10KB, got {} bytes",
-        pdb_id,
+        "Expected mmCIF content for '{pdb_id}' to exceed 10KB, got {} bytes",
         cif_bytes.len()
     );
 
@@ -212,16 +55,14 @@ async fn fetch_rcsb_mmCIF_basic_structure() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_rcsb_pdb_basic_structure() -> Result<(), Box<dyn Error>> {
-    let client = rcsb_client()?;
+async fn fetch_rcsb_pdb_basic_structure() -> Result<()> {
+    let client = RcsbClient::new()?;
     let pdb_id = "4HHB";
-    let url = rcsb_pdb_url(pdb_id);
-    let pdb = fetch_text(&client, &url).await?;
+    let pdb = client.download_pdb_text(pdb_id).await?;
 
     assert!(
         !pdb.trim().is_empty(),
-        "Expected PDB response to be non-empty for PDB id '{}'",
-        pdb_id
+        "Expected PDB response to be non-empty for PDB id '{pdb_id}'"
     );
 
     let first_non_empty_line = pdb
@@ -230,16 +71,12 @@ async fn fetch_rcsb_pdb_basic_structure() -> Result<(), Box<dyn Error>> {
         .unwrap_or_default();
     assert!(
         first_non_empty_line.starts_with("HEADER") || first_non_empty_line.starts_with("TITLE"),
-        "Expected PDB first non-empty line to start with 'HEADER' or 'TITLE' for '{}', got '{}': URL {}",
-        pdb_id,
-        first_non_empty_line,
-        url
+        "Expected PDB first non-empty line to start with 'HEADER' or 'TITLE' for '{pdb_id}', got '{first_non_empty_line}'"
     );
 
     assert!(
         pdb.contains("ATOM") || pdb.contains("HETATM"),
-        "Expected PDB content for '{}' to include 'ATOM' or 'HETATM'",
-        pdb_id
+        "Expected PDB content for '{pdb_id}' to include 'ATOM' or 'HETATM'"
     );
 
     let atom_count = pdb
@@ -249,21 +86,18 @@ async fn fetch_rcsb_pdb_basic_structure() -> Result<(), Box<dyn Error>> {
         .count();
     assert!(
         atom_count > 0,
-        "Expected PDB content for '{}' to contain at least one line starting with 'ATOM' or 'HETATM'",
-        pdb_id
+        "Expected PDB content for '{pdb_id}' to contain at least one line starting with 'ATOM' or 'HETATM'"
     );
 
     assert!(
         pdb.lines()
             .any(|line| line.starts_with("END") || line.starts_with("ENDMDL")),
-        "Expected PDB content for '{}' to contain an 'END' or 'ENDMDL' line",
-        pdb_id
+        "Expected PDB content for '{pdb_id}' to contain an 'END' or 'ENDMDL' line"
     );
 
     assert!(
         pdb.len() > 10 * 1024,
-        "Expected PDB content for '{}' to exceed 10KB, got {} bytes",
-        pdb_id,
+        "Expected PDB content for '{pdb_id}' to exceed 10KB, got {} bytes",
         pdb.len()
     );
 
@@ -271,16 +105,15 @@ async fn fetch_rcsb_pdb_basic_structure() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_rcsb_graphql_metadata() -> Result<(), Box<dyn Error>> {
-    let client = rcsb_client()?;
+async fn fetch_rcsb_graphql_metadata() -> Result<()> {
+    let client = RcsbClient::new()?;
     let pdb_id = "1A2B";
-    let entry = fetch_rcsb_entry_metadata(&client, pdb_id).await?;
+    let entry = client.fetch_entry_metadata(pdb_id).await?;
 
     assert_eq!(
         entry.rcsb_id.to_ascii_uppercase(),
         pdb_id,
-        "Expected RCSB GraphQL entry_id to match requested id '{}', got '{}'",
-        pdb_id,
+        "Expected RCSB GraphQL entry_id to match requested id '{pdb_id}', got '{}'",
         entry.rcsb_id
     );
 
@@ -291,8 +124,7 @@ async fn fetch_rcsb_graphql_metadata() -> Result<(), Box<dyn Error>> {
         .unwrap_or_default();
     assert!(
         !title.is_empty(),
-        "Expected RCSB GraphQL title to be non-empty for entry '{}'",
-        pdb_id
+        "Expected RCSB GraphQL title to be non-empty for entry '{pdb_id}'"
     );
 
     let molecular_weight = entry
@@ -300,16 +132,31 @@ async fn fetch_rcsb_graphql_metadata() -> Result<(), Box<dyn Error>> {
         .as_ref()
         .and_then(|info| info.molecular_weight)
         .ok_or_else(|| {
-            format!(
-                "Expected molecular_weight field in RCSB GraphQL payload for entry '{}'",
-                pdb_id
+            anyhow::anyhow!(
+                "Expected molecular_weight field in RCSB GraphQL payload for entry '{pdb_id}'"
             )
         })?;
     assert!(
         molecular_weight > 0.0,
-        "Expected molecular_weight > 0 for entry '{}', got {}",
-        pdb_id,
-        molecular_weight
+        "Expected molecular_weight > 0 for entry '{pdb_id}', got {molecular_weight}"
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn search_rcsb_entries_text_by_id() -> Result<()> {
+    let client = RcsbClient::new()?;
+    let pdb_id = "4HHB";
+
+    let result = client.search_entries_text(pdb_id, 0, 10).await?;
+    ensure!(
+        result
+            .items
+            .iter()
+            .any(|id| id.eq_ignore_ascii_case(pdb_id)),
+        "Expected text search for '{pdb_id}' to include the entry id in results, got {:?}",
+        result.items
     );
 
     Ok(())
@@ -317,56 +164,45 @@ async fn fetch_rcsb_graphql_metadata() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn rcsb_invalid_id_returns_error() {
-    let client = rcsb_client().unwrap();
+    let client = RcsbClient::new().unwrap();
     let bad_id = "NOTREAL";
 
-    let bad_cif_url = rcsb_cif_url(bad_id);
-    let cif_result = fetch_bytes(&client, &bad_cif_url).await;
+    let cif_result = client.download_cif_bytes(bad_id).await;
     assert!(
         cif_result.is_err(),
-        "Expected mmCIF fetch to fail for invalid RCSB id '{}'",
-        bad_id
+        "Expected mmCIF fetch to fail for invalid RCSB id '{bad_id}'"
     );
     if let Err(error) = cif_result {
         let msg = error.to_string();
         assert!(
             msg.contains(bad_id) || msg.contains("404") || msg.contains("Not Found"),
-            "Expected mmCIF error to mention invalid id or 404-like status for '{}', got '{}'",
-            bad_id,
-            msg
+            "Expected mmCIF error to mention invalid id or 404-like status for '{bad_id}', got '{msg}'"
         );
     }
 
-    let bad_pdb_url = rcsb_pdb_url(bad_id);
-    let pdb_result = fetch_text(&client, &bad_pdb_url).await;
+    let pdb_result = client.download_pdb_text(bad_id).await;
     assert!(
         pdb_result.is_err(),
-        "Expected PDB fetch to fail for invalid RCSB id '{}'",
-        bad_id
+        "Expected PDB fetch to fail for invalid RCSB id '{bad_id}'"
     );
     if let Err(error) = pdb_result {
         let msg = error.to_string();
         assert!(
             msg.contains(bad_id) || msg.contains("404") || msg.contains("Not Found"),
-            "Expected PDB error to mention invalid id or 404-like status for '{}', got '{}'",
-            bad_id,
-            msg
+            "Expected PDB error to mention invalid id or 404-like status for '{bad_id}', got '{msg}'"
         );
     }
 
-    let gql_result = fetch_rcsb_entry_metadata(&client, bad_id).await;
+    let gql_result = client.fetch_entry_metadata(bad_id).await;
     assert!(
         gql_result.is_err(),
-        "Expected GraphQL metadata fetch to fail for invalid RCSB id '{}'",
-        bad_id
+        "Expected GraphQL metadata fetch to fail for invalid RCSB id '{bad_id}'"
     );
     if let Err(error) = gql_result {
         let msg = error.to_string();
         assert!(
             msg.contains(bad_id) || msg.contains("404") || msg.contains("Not Found"),
-            "Expected GraphQL error to mention invalid id or 404-like status for '{}', got '{}'",
-            bad_id,
-            msg
+            "Expected GraphQL error to mention invalid id or 404-like status for '{bad_id}', got '{msg}'"
         );
     }
 }
