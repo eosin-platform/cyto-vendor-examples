@@ -303,6 +303,22 @@ pub struct GeneMetadata {
     pub symbol: String,
     pub chromosome: String,
     pub organism: Organism,
+    #[serde(rename = "locationhist")]
+    pub location_hist: Vec<LocationHist>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LocationHist {
+    #[serde(rename = "annotationrelease")]
+    pub annotation_release: String,
+    #[serde(rename = "assemblyaccver")]
+    pub assembly_acc_ver: String,
+    #[serde(rename = "chraccver")]
+    pub chr_acc_ver: String,
+    #[serde(rename = "chrstart")]
+    pub chr_start: u64,
+    #[serde(rename = "chrstop")]
+    pub chr_stop: u64,
 }
 
 #[derive(Debug, Deserialize)]
