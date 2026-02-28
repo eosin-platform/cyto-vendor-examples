@@ -322,7 +322,7 @@ async fn fetch_example_bioproject_from_ncbi() -> Result<()> {
 }
 
 #[tokio::test]
-async fn fetch_human_brca2_from_ncbi() -> Result<()> {
+async fn fetch_human_brca2_fasta() -> Result<()> {
     let client = NcbiClient::new()?;
     let genes = client
         .list_genes("BRCA2[Gene Name] AND Homo sapiens[Organism]", 0, 3)

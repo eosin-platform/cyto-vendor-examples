@@ -66,6 +66,8 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
+mod ensembl;
 mod ncbi;
 
 #[cfg(test)]

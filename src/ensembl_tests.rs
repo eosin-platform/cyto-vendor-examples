@@ -1,133 +1,12 @@
-use reqwest::Client;
-use serde::Deserialize;
-use std::error::Error;
+use anyhow::Result;
 
-fn ensembl_base_url() -> &'static str {
-    "https://rest.ensembl.org"
-}
-
-fn ensembl_lookup_id_url(id: &str) -> String {
-    format!(
-        "{}/lookup/id/{}?content-type=application/json",
-        ensembl_base_url(),
-        id
-    )
-}
-
-fn ensembl_variation_url(species: &str, id: &str) -> String {
-    format!(
-        "{}/variation/{}/{}?content-type=application/json",
-        ensembl_base_url(),
-        species,
-        id
-    )
-}
-
-fn ensembl_client() -> Result<Client, reqwest::Error> {
-    Client::builder()
-        .user_agent("cyto-vendor-examples/0.1 (ensembl-integration-test)")
-        .build()
-}
-
-#[derive(Debug, Deserialize)]
-struct EnsemblGene {
-    id: String,
-    display_name: String,
-    species: String,
-    #[serde(default)]
-    biotype: String,
-    #[serde(default)]
-    assembly_name: String,
-    #[serde(default)]
-    version: i64,
-}
-
-#[derive(Debug, Deserialize)]
-struct EnsemblTranscript {
-    id: String,
-    display_name: Option<String>,
-    species: String,
-    #[serde(default)]
-    biotype: String,
-    #[serde(default, rename = "Parent")]
-    gene_id: String,
-    #[serde(default)]
-    version: i64,
-}
-
-#[derive(Debug, Deserialize)]
-struct EnsemblVariation {
-    name: String,
-    #[serde(default)]
-    species: String,
-    #[serde(default)]
-    most_severe_consequence: String,
-    #[serde(default)]
-    minor_allele_freq: Option<f64>,
-    #[serde(default, rename = "mappings")]
-    mapping_results: Option<Vec<serde_json::Value>>,
-}
-
-async fn ensembl_fetch_gene(client: &Client, id: &str) -> Result<EnsemblGene, Box<dyn Error>> {
-    let url = ensembl_lookup_id_url(id);
-    let response = client.get(&url).send().await?;
-    let status = response.status();
-    if !status.is_success() {
-        let body = response.text().await.unwrap_or_default();
-        return Err(format!(
-            "Ensembl gene request failed for id '{id}' with status {status}: {body}"
-        )
-        .into());
-    }
-    let gene: EnsemblGene = response.json().await?;
-    Ok(gene)
-}
-
-async fn ensembl_fetch_transcript(
-    client: &Client,
-    id: &str,
-) -> Result<EnsemblTranscript, Box<dyn Error>> {
-    let url = ensembl_lookup_id_url(id);
-    let response = client.get(&url).send().await?;
-    let status = response.status();
-    if !status.is_success() {
-        let body = response.text().await.unwrap_or_default();
-        return Err(format!(
-            "Ensembl transcript request failed for id '{id}' with status {status}: {body}"
-        )
-        .into());
-    }
-    let tx: EnsemblTranscript = response.json().await?;
-    Ok(tx)
-}
-
-async fn ensembl_fetch_variation(
-    client: &Client,
-    species: &str,
-    id: &str,
-) -> Result<EnsemblVariation, Box<dyn Error>> {
-    let url = ensembl_variation_url(species, id);
-    let response = client.get(&url).send().await?;
-    let status = response.status();
-    if !status.is_success() {
-        let body = response.text().await.unwrap_or_default();
-        return Err(format!(
-            "Ensembl variation request failed for {species}/{id} with status {status}: {body}"
-        )
-        .into());
-    }
-    let mut var: EnsemblVariation = response.json().await?;
-    if var.species.trim().is_empty() {
-        var.species = species.to_string();
-    }
-    Ok(var)
-}
+use crate::ensembl::EnsemblClient;
 
 #[tokio::test]
-async fn fetch_ensembl_brca2_gene() -> Result<(), Box<dyn Error>> {
-    let client = ensembl_client()?;
+async fn fetch_ensembl_brca2_gene() -> Result<()> {
+    let client = EnsemblClient::new()?;
     let gene_id = "ENSG00000139618";
-    let gene = ensembl_fetch_gene(&client, gene_id).await?;
+    let gene = client.fetch_gene(gene_id).await?;
 
     assert_eq!(
         gene.id, gene_id,
@@ -162,10 +41,10 @@ async fn fetch_ensembl_brca2_gene() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_ensembl_brca2_transcript() -> Result<(), Box<dyn Error>> {
-    let client = ensembl_client()?;
+async fn fetch_ensembl_brca2_transcript() -> Result<()> {
+    let client = EnsemblClient::new()?;
     let tx_id = "ENST00000380152";
-    let tx = ensembl_fetch_transcript(&client, tx_id).await?;
+    let tx = client.fetch_transcript(tx_id).await?;
 
     assert_eq!(
         tx.id, tx_id,
@@ -205,11 +84,11 @@ async fn fetch_ensembl_brca2_transcript() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_ensembl_brca2_variation() -> Result<(), Box<dyn Error>> {
-    let client = ensembl_client()?;
+async fn fetch_ensembl_brca2_variation() -> Result<()> {
+    let client = EnsemblClient::new()?;
     let species = "homo_sapiens";
     let rs_id = "rs80359273";
-    let var = ensembl_fetch_variation(&client, species, rs_id).await?;
+    let var = client.fetch_variation(species, rs_id).await?;
 
     assert_eq!(
         var.name, rs_id,
@@ -245,99 +124,7 @@ async fn fetch_ensembl_brca2_variation() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn ensembl_sequence_url(id: &str) -> String {
-    format!(
-        "{}/sequence/id/{}?content-type=text/plain",
-        ensembl_base_url(),
-        id
-    )
-}
-
-fn ensembl_assembly_info_url(species: &str) -> String {
-    format!(
-        "{}/info/assembly/{}?content-type=application/json",
-        ensembl_base_url(),
-        species
-    )
-}
-
-#[derive(Debug, Deserialize)]
-struct EnsemblAssemblyInfo {
-    assembly_name: String,
-    assembly_accession: String,
-    #[serde(default)]
-    species: String,
-    #[serde(default)]
-    karyotype: Vec<String>,
-    #[serde(default)]
-    default_coord_system_version: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct EnsemblProtein {
-    id: String,
-    species: String,
-    #[serde(default)]
-    display_name: Option<String>,
-    #[serde(default)]
-    version: i64,
-    #[serde(default)]
-    biotype: String,
-}
-
-async fn ensembl_fetch_assembly_info(
-    client: &Client,
-    species: &str,
-) -> Result<EnsemblAssemblyInfo, Box<dyn Error>> {
-    let url = ensembl_assembly_info_url(species);
-    let response = client.get(&url).send().await?;
-    let status = response.status();
-    if !status.is_success() {
-        let body = response.text().await.unwrap_or_default();
-        return Err(format!(
-            "Ensembl assembly info request failed for species '{species}' with status {status}: {body}"
-        )
-        .into());
-    }
-    let mut info: EnsemblAssemblyInfo = response.json().await?;
-    if info.species.trim().is_empty() {
-        info.species = species.to_string();
-    }
-    Ok(info)
-}
-
-async fn ensembl_fetch_sequence(client: &Client, id: &str) -> Result<String, Box<dyn Error>> {
-    let url = ensembl_sequence_url(id);
-    let response = client.get(&url).send().await?;
-    let status = response.status();
-    if !status.is_success() {
-        let body = response.text().await.unwrap_or_default();
-        return Err(format!(
-            "Ensembl sequence request failed for id '{id}' with status {status}: {body}"
-        )
-        .into());
-    }
-    let seq = response.text().await?;
-    Ok(seq)
-}
-
-async fn ensembl_fetch_protein(
-    client: &Client,
-    id: &str,
-) -> Result<EnsemblProtein, Box<dyn Error>> {
-    let url = ensembl_lookup_id_url(id);
-    let response = client.get(&url).send().await?;
-    let status = response.status();
-    if !status.is_success() {
-        let body = response.text().await.unwrap_or_default();
-        return Err(format!(
-            "Ensembl protein request failed for id '{id}' with status {status}: {body}"
-        )
-        .into());
-    }
-    let protein: EnsemblProtein = response.json().await?;
-    Ok(protein)
-}
+// NOTE: assembly info / protein / sequence types and fetchers come from `crate::ensembl` now.
 
 fn is_dna_sequence(seq: &str) -> bool {
     seq.chars().all(|base| {
@@ -382,10 +169,10 @@ fn is_protein_sequence(seq: &str) -> bool {
 }
 
 #[tokio::test]
-async fn fetch_ensembl_human_assembly_info() -> Result<(), Box<dyn Error>> {
-    let client = ensembl_client()?;
+async fn fetch_ensembl_human_assembly_info() -> Result<()> {
+    let client = EnsemblClient::new()?;
     let species = "homo_sapiens";
-    let info = ensembl_fetch_assembly_info(&client, species).await?;
+    let info = client.fetch_assembly_info(species).await?;
 
     assert!(
         info.species.eq_ignore_ascii_case(species),
@@ -415,10 +202,10 @@ async fn fetch_ensembl_human_assembly_info() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_ensembl_brca2_protein() -> Result<(), Box<dyn Error>> {
-    let client = ensembl_client()?;
+async fn fetch_ensembl_brca2_protein() -> Result<()> {
+    let client = EnsemblClient::new()?;
     let protein_id = "ENSP00000419060";
-    let protein = ensembl_fetch_protein(&client, protein_id).await?;
+    let protein = client.fetch_protein(protein_id).await?;
 
     assert_eq!(
         protein.id, protein_id,
@@ -449,10 +236,10 @@ async fn fetch_ensembl_brca2_protein() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_ensembl_brca2_gene_sequence() -> Result<(), Box<dyn Error>> {
-    let client = ensembl_client()?;
+async fn fetch_ensembl_brca2_gene_sequence() -> Result<()> {
+    let client = EnsemblClient::new()?;
     let gene_id = "ENSG00000139618";
-    let seq = ensembl_fetch_sequence(&client, gene_id).await?;
+    let seq = client.fetch_sequence(gene_id).await?;
 
     assert!(
         !seq.trim().is_empty(),
@@ -470,10 +257,10 @@ async fn fetch_ensembl_brca2_gene_sequence() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn fetch_ensembl_brca2_transcript_sequence() -> Result<(), Box<dyn Error>> {
-    let client = ensembl_client()?;
+async fn fetch_ensembl_brca2_transcript_sequence() -> Result<()> {
+    let client = EnsemblClient::new()?;
     let tx_id = "ENST00000380152";
-    let seq = ensembl_fetch_sequence(&client, tx_id).await?;
+    let seq = client.fetch_sequence(tx_id).await?;
 
     assert!(
         !seq.trim().is_empty(),
@@ -491,10 +278,10 @@ async fn fetch_ensembl_brca2_transcript_sequence() -> Result<(), Box<dyn Error>>
 }
 
 #[tokio::test]
-async fn fetch_ensembl_brca2_protein_sequence() -> Result<(), Box<dyn Error>> {
-    let client = ensembl_client()?;
+async fn fetch_ensembl_brca2_protein_sequence() -> Result<()> {
+    let client = EnsemblClient::new()?;
     let protein_id = "ENSP00000419060";
-    let seq = ensembl_fetch_sequence(&client, protein_id).await?;
+    let seq = client.fetch_sequence(protein_id).await?;
 
     assert!(
         !seq.trim().is_empty(),
