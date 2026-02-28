@@ -211,6 +211,8 @@ impl NcbiClient {
         for attempt in 0..5 {
             let response = {
                 let _guard = ncbi_request_gate().lock().await;
+                // NCBI has 3 req/second limit, so we wait a bit before each request.
+                // The mutex ensures that even across multiple async tasks we won't exceed the rate limit.
                 sleep(Duration::from_millis(350)).await;
                 self.client.get(url).send().await?
             };
