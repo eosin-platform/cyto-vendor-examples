@@ -1,6 +1,7 @@
-use anyhow::Result;
+use anyhow::{Result, ensure};
 
 use crate::ensembl::EnsemblClient;
+use crate::ncbi::parse_fasta;
 
 #[tokio::test]
 async fn fetch_ensembl_brca2_gene() -> Result<()> {
@@ -251,6 +252,55 @@ async fn fetch_ensembl_brca2_gene_sequence() -> Result<()> {
         "Expected DNA alphabet sequence for gene '{}', got leading snippet '{}'",
         gene_id,
         seq.chars().take(40).collect::<String>()
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn fetch_ensembl_brca2_fasta() -> Result<()> {
+    let client = EnsemblClient::new()?;
+    let gene_id = "ENSG00000139618";
+
+    // Mirror the NCBI FASTA test pattern: fetch metadata, then fetch FASTA.
+    let gene = client.fetch_gene(gene_id).await?;
+    assert!(
+        gene.display_name.eq_ignore_ascii_case("BRCA2"),
+        "Expected Ensembl display_name 'BRCA2', got '{}'",
+        gene.display_name
+    );
+
+    let fasta = client.fetch_fasta(gene_id).await?;
+    let (header, sequence) = parse_fasta(&fasta)?;
+    ensure!(
+        header.contains(gene_id),
+        "Unexpected FASTA header (expected it to mention {}), got '{header}'",
+        gene_id
+    );
+    ensure!(
+        !sequence.trim().is_empty(),
+        "Expected non-empty FASTA sequence for Ensembl gene '{gene_id}'"
+    );
+    ensure!(
+        is_dna_sequence(sequence.trim()),
+        "Expected DNA FASTA sequence for gene '{}', got leading snippet '{}'",
+        gene_id,
+        sequence.chars().take(40).collect::<String>()
+    );
+
+    // Cross-check: FASTA payload should match the plain-text sequence endpoint.
+    let plain = client.fetch_sequence(gene_id).await?;
+    let plain = plain.trim();
+    let fasta_seq = sequence.trim();
+    ensure!(
+        fasta_seq.len() == plain.len(),
+        "Ensembl FASTA sequence length mismatch for '{gene_id}': plain={}, fasta={}",
+        plain.len(),
+        fasta_seq.len()
+    );
+    ensure!(
+        fasta_seq.eq_ignore_ascii_case(plain),
+        "Ensembl FASTA content mismatch for '{gene_id}'"
     );
 
     Ok(())

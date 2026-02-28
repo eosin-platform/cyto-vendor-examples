@@ -85,6 +85,13 @@ impl EnsemblClient {
         })
     }
 
+    pub async fn fetch_fasta(&self, id: &str) -> Result<String> {
+        let url = self.fasta_url(id);
+        self.fetch_text_with_retries(&url).await.map_err(|err| {
+            anyhow!("Failed to fetch Ensembl FASTA for id '{id}' from '{url}': {err}")
+        })
+    }
+
     fn lookup_id_url(&self, id: &str) -> String {
         format!(
             "{}/lookup/id/{}?content-type=application/json",
@@ -109,6 +116,13 @@ impl EnsemblClient {
     fn sequence_url(&self, id: &str) -> String {
         format!(
             "{}/sequence/id/{}?content-type=text/plain",
+            self.base_url, id
+        )
+    }
+
+    fn fasta_url(&self, id: &str) -> String {
+        format!(
+            "{}/sequence/id/{}?content-type=text/x-fasta",
             self.base_url, id
         )
     }
