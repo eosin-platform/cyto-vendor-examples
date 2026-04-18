@@ -445,8 +445,6 @@ query ($id: String!) {
             .await
             .map_err(|err| anyhow!("Failed to fetch RCSB full metadata for '{pdb_id}': {err}"))?;
 
-        eprintln!("RCSB GraphQL full data for entry '{pdb_id}': {data:#}");
-
         Ok(data)
     }
 

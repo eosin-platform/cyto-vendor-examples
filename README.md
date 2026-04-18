@@ -24,6 +24,48 @@ This repo acts as both:
 
 ---
 
+# **CLI Dump Command**
+
+The binary now exposes a Clap CLI for dumping example payloads into a local output tree.
+
+```bash
+cargo run -- dump
+cargo run -- dump genes
+cargo run -- dump genes --count 2
+cargo run -- dump proteins --vendor ncbi,uniprot
+cargo run -- dump images -o /tmp/cyto-dump
+OUT_DIR=/tmp/cyto-dump cargo run -- dump variants
+```
+
+Key behavior:
+
+* `dump` with no entity subcommand runs all supported entity types.
+* `dump <entity>` only runs that entity type.
+* `--out` / `-o` / `OUT_DIR` controls the root output directory. The default is `dump/`.
+* The target output is always cleared before writing:
+  * `cargo run -- dump` removes the full output root first.
+  * `cargo run -- dump genes` removes only `dump/genes` (or the equivalent path under `--out`).
+* `--count N` writes `N` unique examples per vendor for the selected entity type.
+* `--vendor vendor1,vendor2` filters the selected entity type(s) to the listed vendors.
+
+Output layout:
+
+```text
+dump/<entity>/<vendor>_<entity>_0.<ext>
+dump/<entity>/<vendor>_<entity>_1.<ext>
+dump/<entity>/<vendor>_<entity>_2.<ext>
+```
+
+Notes:
+
+* JSON responses are written as pretty-printed `.json` files.
+* Native text formats keep their upstream file types, for example `.fasta`, `.gtf`, `.obo`, `.chain`, `.cif`, and image outputs such as `.dcm` or the GTEx tile image extension.
+* Each discrete example is written to its own file. Multi-record formats like FASTA, GTF, OBO, and UCSC chain files are split so one dumped example maps to one output file.
+* The CLI samples unique examples without replacement. If you ask for more unique records than a vendor/entity source can provide, the command fails instead of repeating the same example.
+* Run `cargo run -- dump --help` and `cargo run -- dump <entity> --help` to inspect the full command surface.
+
+---
+
 # **Why This Exists**
 
 The world of scientific data is sprawling and inconsistent.
